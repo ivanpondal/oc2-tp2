@@ -7,6 +7,10 @@
 #define FILTRO_C   0
 #define FILTRO_ASM 1
 
+#define RED_OFFSET 2
+#define GREEN_OFFSET 1
+#define BLUE_OFFSET 0
+
 typedef struct bgra_t {
 	unsigned char b, g, r, a;
 } __attribute__((packed)) bgra_t;
