@@ -1,69 +1,41 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 #include "../tp2.h"
 
+void diff_c (
+	unsigned char *src,
+	unsigned char *src_2,
+	unsigned char *dst,
+	int m,
+	int n,
+	int src_row_size,
+	int src_2_row_size,
+	int dst_row_size
+) {
+	unsigned char (*src_matrix)[src_row_size] = (unsigned char (*)[src_row_size]) src;
+	unsigned char (*src_2_matrix)[src_2_row_size] = (unsigned char (*)[src_2_row_size]) src_2;
+	unsigned char (*dst_matrix)[dst_row_size] = (unsigned char (*)[dst_row_size]) dst;
+	unsigned char pixel[3];
+	unsigned char infinite_norm = 0;
 
-double g_sigma(float sigm, int x_pos, int y_pos){
-	const double pi = 3.1415926535897;
-	//aplico la funcion de densidad guassiana a los parametros
-	double res = (exp(-(x_pos*x_pos+y_pos*y_pos)/(2*sigm*sigm)))/(2*(pi)*sigm*sigm);
-	return res;	
-}
+	for(int y = 0; y < n; y++){
+		for(int x = 0; x < dst_row_size; x += 4){
+			// calculo el valor absoluto de la resta entre cada componente
+			pixel[RED_OFFSET] = abs(src_matrix[y][x + RED_OFFSET] - src_2_matrix[y][x + RED_OFFSET]);
+			pixel[GREEN_OFFSET] = abs(src_matrix[y][x + GREEN_OFFSET] - src_2_matrix[y][x + GREEN_OFFSET]);
+			pixel[BLUE_OFFSET] = abs(src_matrix[y][x + BLUE_OFFSET] - src_2_matrix[y][x + BLUE_OFFSET]);
 
-
-
-void blur_c    (
-    unsigned char *src,
-    unsigned char *dst,
-    int cols,
-    int filas,
-    float sigma,
-    int radius)
-{
-    unsigned char (*src_matrix)[cols*4] = (unsigned char (*)[cols*4]) src;
-    unsigned char (*dst_matrix)[cols*4] = (unsigned char (*)[cols*4]) dst;
-
-	int n = (2*radius+1)*(2*radius+1);
-	int pos_i = radius; // arranco abajo, en la posicion radius contando de abajo hacia arriba
-	int pos_j = cols - radius; // arranco a radius distancia del extremo derecho
-	double gs;
-
-	for(int contador = 0; contador < (cols*filas - 2*radius*(cols + filas) + 2*radius*radius); contador++ ){
-		
-		unsigned char blue_acum = 0;
-		unsigned char red_acum = 0;
-		unsigned char green_acum = 0;
-		int pos_x = 0;
-		int pos_y = 0;
-		//Recorro la zona de tamaño radius^2 alrededor de la posicion actual y calculo el valor del punto
-		for(int contador2 = 0; contador2 < n; contador2++){			
-			gs = g_sigma(sigma, pos_x - radius, pos_y - radius);
-			blue_acum = blue_acum + src_matrix[pos_i + pos_y - radius][4*(pos_j - pos_x + radius) + 0]*gs;
-			green_acum = green_acum + src_matrix[pos_i + pos_y - radius][4*(pos_j - pos_x + radius) + 1]*gs;
-			red_acum = red_acum + src_matrix[pos_i + pos_y - radius][4*(pos_j - pos_x + radius) + 2]*gs;
-			
-			if(pos_x == 2*radius + 1){
-				pos_x = 0;
-				pos_y++;
-			}	
-			else{
-				pos_x++;
-			}				
-		}
-	
-		dst_matrix[pos_i][4*pos_j + 0] = blue_acum;
-		dst_matrix[pos_i][4*pos_j + 1] = green_acum;
-		dst_matrix[pos_i][4*pos_j + 2] = red_acum;
-		dst_matrix[pos_i][4*pos_j + 3] = 255;
-		
-		
-		if(pos_j == radius){
-			pos_j = cols - radius;
-			pos_i = pos_i + 1;
+			// busco el máximo valor absoluto de las tres componentes
+			if(pixel[BLUE_OFFSET] > pixel[GREEN_OFFSET]){
+				infinite_norm = (pixel[BLUE_OFFSET] > pixel[RED_OFFSET]) ? pixel[BLUE_OFFSET] : pixel[RED_OFFSET];
 			}
-		else{	pos_j = pos_j - 1;
+			else{
+				infinite_norm = (pixel[GREEN_OFFSET] > pixel[RED_OFFSET]) ? pixel[GREEN_OFFSET] : pixel[RED_OFFSET];
+			}
+
+			dst_matrix[y][x + RED_OFFSET] = infinite_norm;
+			dst_matrix[y][x + GREEN_OFFSET] = infinite_norm;
+			dst_matrix[y][x + BLUE_OFFSET] = infinite_norm;
 		}
 	}
-	
 }
