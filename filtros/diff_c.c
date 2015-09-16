@@ -36,6 +36,7 @@ void diff_c (
 			dst_matrix[y][x + RED_OFFSET] = infinite_norm;
 			dst_matrix[y][x + GREEN_OFFSET] = infinite_norm;
 			dst_matrix[y][x + BLUE_OFFSET] = infinite_norm;
+			dst_matrix[y][x + TRANSP_OFFSET] = 255;
 		}
 	}
 }
