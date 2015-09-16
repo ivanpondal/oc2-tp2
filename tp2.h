@@ -10,6 +10,7 @@
 #define RED_OFFSET 2
 #define GREEN_OFFSET 1
 #define BLUE_OFFSET 0
+#define TRANSP_OFFSET 3
 
 typedef struct bgra_t {
 	unsigned char b, g, r, a;
