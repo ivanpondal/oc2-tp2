@@ -1,11 +1,11 @@
 1;
 
 function retval = gauss1d (x, sigma)
-	retval = (1/(2*pi*sigma**2))*e**(-(x**2)/(2*sigma**2));
+	retval = e**(-(x**2)/(2*sigma**2))/(sqrt(2*pi)*sigma);
 endfunction
 
 function retval = gauss2d (x, y, sigma)
-	retval = (1/(2*pi*sigma**2))*e**(-(x**2 + y**2)/(2*sigma**2));
+	retval = e**(-(x**2 + y**2)/(2*sigma**2))/(2*pi*sigma**2);
 endfunction
 
 function retval = gaussMatrix (r, sigma)
