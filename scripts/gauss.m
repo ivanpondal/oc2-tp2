@@ -17,3 +17,11 @@ function retval = gaussMatrix (r, sigma)
 		endfor
 	endfor
 endfunction
+
+function retval = gaussNormalizedMatrix (r, sigma)
+	A = gaussMatrix(r, sigma);
+	n = 2*r+1;
+	remainder = (1-sum(sum(A)))/(n*n);
+	A += ones(n)*remainder;
+	retval = A;
+endfunction
