@@ -11,10 +11,10 @@ double g_sigma(float sigm, int x_pos, int y_pos){
 	return res;	
 }
 
-//dada una matrix de n*n tenemos que se repiten los numeros ((r+1)/2)
-//0, 1, 2, 3 ... n = vecinos
-//1, 3, 6, 10 = (n+2)(n+1)/2 = numeros que se repiten
-
+//Dado un kernel de n vecinos tenemos que se repiten los numeros de la siguiente manera:
+//Para 0, 1, 2, 3 ... n = vecinos
+//Hay: 1, 3, 6, 10... (n+2)(n+1)/2 = numeros sin contar repetidos y estos se hayan en 1/8 de la matriz
+//Esto de arriba lo dejo anotado pero enrealidad ni lo use.
 
 
 
