@@ -5,15 +5,16 @@ global diff_asm
 
 section .data
 	align 16
-	end_255: db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15
+	end_255: db 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	align 16
-	;mask_r: db 13, 13, 13, 0, 9, 9, 9, 0, 5, 5, 5, 0, 1, 1, 1, 0
-	mask_r: db 1,1,1,0,5,5,5,0,9,9,9,0,13,13,13,0 
+	;mask_r: db 1,1,0,1,5,5,0,5,9,9,0,9,13,13,0,13 
+	mask_r: db 2,2,2,0,6,6,6,0,10,10,10,0,14,14,14,0  
+	;el orden efectivamente es b,g,r,a
 
 section .text
 ;void diff_asm    (
 	;unsigned char *src,		;rsi
-   ;unsigned char *src2,	;rdi
+   	;unsigned char *src2,		;rdi
 	;unsigned char *dst,		;rdx
 	;int filas,					;ecx
 	;int cols)					;r8d
@@ -55,17 +56,17 @@ diff_asm:
 		punpcklbw xmm2, xmm7	;xmm2 = (b1',g1',r1',a1') | (b0',g0',r0',a0')
 		punpckhbw xmm4, xmm7	;xmm4 = (b3',g3',r3',a3') | (b2',g2',r2',a2')
 		
-		psubw xmm1, xmm2 		;xmm1 = (b1-b1',...,a1-a1')| (b0-b0',...,a0-a0')
-		psubw xmm3, xmm4 		;xmm3 = (b3-b3',...,a3-a3')| (b2-b2',...,a2-a2')
-		pabsw xmm1, xmm1		;xmm1 = (|b1-b1'|,...,|a1-a1'|) | (|b0-b0'|,...,|a0-a0'|)
-		pabsw xmm3, xmm3		;xmm3 = (|b3-b3'|,...,|a3-a3'|) | (|b2-b2'|,...,|a2-a2'|)
-		packuswb xmm1, xmm3		;xmm1 = (|b3-b3'|,...,|a3-a3'|) |...| (|b0-b0'|,...,|a0-a0')
+		psubw xmm1, xmm2 		;xmm1 = (a1-a1',...,b1-b1')| (a0-a0',...,b0-b0')
+		psubw xmm3, xmm4 		;xmm3 = (a3-a3',...,b3-b3')| (a2-a2',...,b2-b2')
+		pabsw xmm1, xmm1		;xmm1 = (|a1-a1'|,...,|b1-b1'|) | (|a0-a0'|,...,|b0-b0'|)
+		pabsw xmm3, xmm3		;xmm3 = (|a3-a3'|,...,|b3-b3'|) | (|a2-a2'|,...,|b2-b2'|)
+		packuswb xmm1, xmm3		;xmm1 = (|a3-a3'|,...,|b3-b3'|) |...| (|a0-a0'|,...,|b0-b0')
 
 		;Ahora calculo el máximo
 		movdqu xmm2, xmm1
-		psrld xmm2, 8			;xmm2 = (0,|b3-b3'|,...,|r3-r3'|) |...| (0,|b0-b0'|,...,|r0-r0'|)
-		pmaxub xmm2, xmm1
-		psrld xmm2, 8
+		pslld xmm2, 8			;xmm2 = (|r3-r3'|,...,|b3-b3'|,0) |...| (|r0-r0'|,...,|b0-b0'|,0)
+		pmaxub xmm2, xmm1		
+		pslld xmm2, 8
 		pmaxub xmm2, xmm1		;el máximo de cada pixel esta en la componente r
 		por xmm2, [end_255]
 		pshufb xmm2, [mask_r]
