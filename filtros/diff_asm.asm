@@ -7,7 +7,8 @@ section .data
 	align 16
 	end_255: db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15
 	align 16
-	mask_r: db 13, 13, 13, 0, 9, 9, 9, 0, 5, 5, 5, 0, 1, 1, 1, 0
+	;mask_r: db 13, 13, 13, 0, 9, 9, 9, 0, 5, 5, 5, 0, 1, 1, 1, 0
+	mask_r: db 1,1,1,0,5,5,5,0,9,9,9,0,13,13,13,0 
 
 section .text
 ;void diff_asm    (
@@ -43,9 +44,9 @@ diff_asm:
 
 	;Itero sobre todos los pixeles y realizo la operación de diff
 	.ciclo:
-		movdqu xmm1, [r12]	;xmm1 = px3 | px2 | px1 | px0
-		movdqu xmm2, [r13]	;xmm2 = px3'| px2'| px1'| px0'
-		;Antes de restar necesito desempaquetar de bytes a words, pues el resultado puede ser negativo, y por tanto requiero el doble de bits
+		movdqu xmm1, [r13]	;xmm1 = px3 | px2 | px1 | px0
+		movdqu xmm2, [r12]	;xmm2 = px3'| px2'| px1'| px0'
+		;Antes de restar necesito desempaquetar de bytes a words, pues el resultado puede estar entre -255 y 255, y por tanto requiero el doble de bits
 		pxor xmm7, xmm7
 		movdqu xmm3, xmm1
 		movdqu xmm4, xmm2
@@ -58,7 +59,7 @@ diff_asm:
 		psubw xmm3, xmm4 		;xmm3 = (b3-b3',...,a3-a3')| (b2-b2',...,a2-a2')
 		pabsw xmm1, xmm1		;xmm1 = (|b1-b1'|,...,|a1-a1'|) | (|b0-b0'|,...,|a0-a0'|)
 		pabsw xmm3, xmm3		;xmm3 = (|b3-b3'|,...,|a3-a3'|) | (|b2-b2'|,...,|a2-a2'|)
-		packuswb xmm1, xmm3	;xmm1 = (|b3-b3'|,...,|a3-a3'|) |...| (|b0-b0'|,...,|a0-a0')
+		packuswb xmm1, xmm3		;xmm1 = (|b3-b3'|,...,|a3-a3'|) |...| (|b0-b0'|,...,|a0-a0')
 
 		;Ahora calculo el máximo
 		movdqu xmm2, xmm1
@@ -80,4 +81,4 @@ diff_asm:
 	pop r13
 	pop r12	
 	pop rbp
-   ret
+   	ret
