@@ -33,7 +33,6 @@ diff_asm:
 
 	;Calculo la cantidad de pixeles total
 	xor rax, rax
-	xor rdx, rdx
 	mov eax, ecx
 	mul r8d					;eax = low(filas*cols) ;edx = high(filas*cols)
 	shl rdx, 32
