@@ -49,15 +49,13 @@ void blur_c    (
     unsigned char (*dst_matrix)[cols*4] = (unsigned char (*)[cols*4]) dst;
 
 
-	
-//Guardo los elementos del kernel que voy a necesitar luego
-	
+	double kernel_vector[n];	
+//Guardo los elementos del kernel que voy a necesitar luego	
 	int n = (radius+1)*(radius+2)/2;
 //Dado un kernel de r vecinos los numeros se repiten de la siguiente manera:
 //Para 0, 1, 2, 3 ... r vecinos
 //Hay: 1, 3, 6, 10... (r+1)(r+2)/2 numeros sin contar repetidos y estos se hayan en 1/8 de la matriz
 	int contador = 0;
-	double kernel_vector[n];
 	for(int i = 0; i <= radius; i++){			
 		for(int j=i; j <= radius; j++){
 			kernel_vector[contador] = g_sigma(sigma, j, i);
@@ -66,7 +64,7 @@ void blur_c    (
 	}
 	
 	int pos_i = radius; // arranco abajo, en la posicion radius contando de abajo hacia arriba
-	int pos_j = cols - radius; // arranco a radius distancia del extremo derecho
+	int pos_j = cols - radius /*- 1*/; // arranco a radius distancia del extremo derecho
 
 	double blue_acum;
 	double red_acum;
@@ -76,7 +74,7 @@ void blur_c    (
 	double suma_red;
 	double suma_green;
 
-	for(int contador = 0; contador < (cols*filas - 2*radius*(cols + filas) + 2*radius*radius); contador++ ){
+	for(int contador = 0; contador < (cols*filas - 2*radius*(cols + filas) + 2*radius*radius /*+ filas - 2*radius*/); contador++ ){
 // (cols*filas - 2*radius*(cols + filas) + 2*radius*radius) es la cantidad de pixels que tengo que cambiar
 // Si altero mas pixels que esos me voy a ir muy al borde de la imagen y al querer agarrar elementos a radio distancia van a haber problemas
 		blue_acum = 0;
@@ -188,7 +186,7 @@ void blur_c    (
 			
 			
 			if(pos_j == radius){
-				pos_j = cols - radius;
+				pos_j = cols - radius /*- 1*/;
 				pos_i = pos_i + 1;
 				}
 			else{
