@@ -12,6 +12,8 @@
 #define BLUE_OFFSET 0
 #define TRANSP_OFFSET 3
 
+#define PI 3.1415926535897
+
 typedef struct bgra_t {
 	unsigned char b, g, r, a;
 } __attribute__((packed)) bgra_t;

@@ -4,15 +4,53 @@
 #include "../tp2.h"
 
 
-double g_sigma(float sigm, int x_pos, int y_pos){
-	const double pi = 3.1415926535897;
-	double sigm_d = sigm;
+float g_sigma(float sigma, int x, int y){
 	//aplico la funcion de densidad guassiana a los parametros
-	double res = (exp(-(x_pos*x_pos+y_pos*y_pos)/(2*sigm_d*sigm_d)))/(2*(pi)*sigm_d*sigm_d);
-	return res;	
+	return (exp(-(x*x+y*y)/(2*sigma*sigma)))/(2*(PI)*sigma*sigma);
 }
 
-void blur_c    (
+float* kernel_matrix(float sigma, int radio){
+	int m = 2*radio + 1;
+	float *k = malloc(m*m*sizeof(float));
+
+	for(int y = 0; y < m; y++){
+		for(int x = 0; x < m; x++){
+			k[y*m + x] = g_sigma(sigma, x - radio, y - radio);
+		}
+	}
+	return k;
+}
+
+// Implementación similar a la de ASM
+void blur_c(unsigned char *src, unsigned char *dst, int cols, int filas, float sigma, int radius){
+	int bytes_in_row = cols*4;
+	int m = 2*radius + 1;
+	unsigned char (*src_matrix)[bytes_in_row] = (unsigned char (*)[bytes_in_row]) src;
+	unsigned char (*dst_matrix)[bytes_in_row] = (unsigned char (*)[bytes_in_row]) dst;
+	float (*k)[m] = (float (*)[m]) kernel_matrix(sigma, radius);
+
+	for (int y = radius; y < filas-radius; y++){
+		for (int x = 4*radius; x < bytes_in_row-4*radius; x += 4){
+			float red = 0;
+			float green = 0;
+			float blue = 0;
+			for(int y_m = 0; y_m < m; y_m++){
+				for(int x_m = 0; x_m < m; x_m++){
+					red += k[y_m][x_m]*src_matrix[y + y_m - radius][x + 4*(x_m - radius) + RED_OFFSET];
+					green += k[y_m][x_m]*src_matrix[y + y_m - radius][x + 4*(x_m - radius) + GREEN_OFFSET];
+					blue += k[y_m][x_m]*src_matrix[y + y_m - radius][x + 4*(x_m - radius) + BLUE_OFFSET];
+				}
+			}
+			dst_matrix[y][x + RED_OFFSET] = red;
+			dst_matrix[y][x + GREEN_OFFSET] = green;
+			dst_matrix[y][x + BLUE_OFFSET] = blue;
+		}
+	}
+
+	free(k);
+}
+
+void blur_c_v2    (
     unsigned char *src,
     unsigned char *dst,
     int cols,
