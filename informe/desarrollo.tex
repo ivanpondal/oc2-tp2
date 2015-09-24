@@ -1,0 +1,54 @@
+\subsection{Explicación del código}
+\subsubsection*{diff\_asm}
+Como primer paso computamos el total de píxeles que tiene la imagen. Para esto simplemente realizamos el producto entre la cantidad de filas (en eax) y de columnas (en r8d). Como es un producto de enteros de 32 bits, según nos dice el manual, la parte baja del resultado se guarda en eax, mientras que la alta lo hace en edx. Ya que lo que queremos es tener el resultado entero en rcx, realizamos un shifteo lógico de rdx que deja la parte baja del mismo con 0's y la parte alta con lo que solía tener la parte baja. 
+
+\begin{figure}[h]
+\caption{Suma de registros}
+\label{fig:sumaReg}
+	\begin{bytefield}[bitwidth = 0.75em]{64}
+		\bitheader[b]{0,31,32,63}\\
+		\bitbox{32}{Parte alta de filas $\times$ columnas}
+		\bitbox{32}{0}
+	\end{bytefield}
+
+	\vspace*{5em}
+	\begin{bytefield}[bitwidth = 0.75em]{64}
+		\bitheader[b]{0,31,32,63}\\
+		\bitbox{32}{Parte alta de filas $\times$ columnas}
+		\bitbox{32}{0}
+	\end{bytefield}
+\end{figure}
+
+Dado que cada pixel son 4 bytes, y las instrucciones SIMD me permiten operar con 16, vamos a procesar de a 4 píxeles por iteración. Por lo tanto dividimos por 4 rcx.
+
+A continuación analizamos una iteración del ciclo:
+
+Primero, cargamos 4 píxeles de src y src2 en XMM1 y XMM2 respectivamente. Es importante recordar que al cargar los píxeles en cada registro, el orden relativo de los mismos es el inverso al que tenían en memoria, así como el de sus componentes. Para ilustrar mejor esta idea puede verse la figura (????). 
+
+\begin{figure}[h]
+\caption{Copiado de cuatro píxeles en un registro XMM}
+\label{fig:sumaReg}
+\begin{bytefield}{1}
+	\memsection{}{}{6}{\vdots}\\
+	\begin{rightwordgroup}{p0}
+		\memsection{}{}{1}{b}\\
+		\memsection{}{}{1}{g}\\
+		\memsection{}{}{1}{r}\\
+		\memsection{}{}{1}{a}\\
+	\end{rightwordgroup}
+	\memsection{}{}{4}{p1}\\
+	\memsection{}{}{4}{p2}\\
+	\memsection{}{}{4}{p3}\\
+	\memsection{}{}{6}{\vdots}
+\end{bytefield}
+
+	\vspace*{5em}
+	\begin{bytefield}[bitwidth = 0.75em]{64}
+		\bitheader[b]{0,31,32,63}\\
+		\bitbox{32}{Parte alta de filas $\times$ columnas}
+		\bitbox{32}{0}
+	\end{bytefield}
+\end{figure}
+
+
+Luego, querremos realizar restas componente a componente (byte a byte), pero como existe la posibilidad de que den resultados negativos tenemos que extender los operandos de bytes a words para poder representar los números entre -255 y 255. A tal fin usamos las operaciones de desempaquetado de byte a word, y extendiendo las componentes de los píxeles con un cero (pues todas son positivas).  
