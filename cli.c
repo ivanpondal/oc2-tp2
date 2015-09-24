@@ -206,5 +206,13 @@ void imprimir_ayuda ( char *nombre_programa) {
 	printf ( "                   "
 	         "Imprime información adicional\n" );
 	printf ( "\n" );
+		printf ( "    -l, --list_times ARCHIVO_SALIDA\n");
+	printf ( "                                   "
+	         "Mide el tiempo que tarda en ejecutar cada iteración\n"
+	         "                                   "
+	         " y devuelve la lista descendente con los tiempos en \n"
+	         "                                   "
+	         "ARCHIVO_SALIDA\n");
+	printf("\n");
 
 }

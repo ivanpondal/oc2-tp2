@@ -22,7 +22,7 @@ def barplot_blur(f_c, f_asm):
 	width = 0.35       # the width of the bars
 
 	fig, ax = plt.subplots()
-	rects1 = ax.bar(ind, cMeans, width, color='r', yerr=cStd)
+	rects1 = ax.bar(ind, cMeans, width, color='r', yerr=cStd, log=True)
 
 
 	times_asm = fileTolist(f_asm)
@@ -31,7 +31,7 @@ def barplot_blur(f_c, f_asm):
 	asmMeans = [trim_mean(x, 0.25) for x in times_asm]
 	asmStd =   [np.std(x) for x in times_asm]
 
-	rects2 = ax.bar(ind+width, asmMeans, width, color='y', yerr=asmStd)
+	rects2 = ax.bar(ind+width, asmMeans, width, color='y', yerr=asmStd, log=True)
 
 	# add some text for labels, title and axes ticks
 	ax.set_ylabel('Tiempo (#ticks)')
@@ -68,7 +68,7 @@ def barplot_diff(f_c, f_asm):
 	width = 0.35       # the width of the bars
 
 	fig, ax = plt.subplots()
-	rects1 = ax.bar(ind, cMeans, width, color='r', yerr=cStd)
+	rects1 = ax.bar(ind, cMeans, width, color='r', yerr=cStd, log=True)
 
 
 	times_asm = fileTolist(f_asm)
@@ -77,7 +77,7 @@ def barplot_diff(f_c, f_asm):
 	asmMeans = [trim_mean(x, 0.25) for x in times_asm]
 	asmStd =   [np.std(x) for x in times_asm]
 
-	rects2 = ax.bar(ind+width, asmMeans, width, color='y', yerr=asmStd)
+	rects2 = ax.bar(ind+width, asmMeans, width, color='y', yerr=asmStd, log=True)
 
 	# add some text for labels, title and axes ticks
 	ax.set_ylabel('Tiempo (#ticks)')
@@ -85,7 +85,6 @@ def barplot_diff(f_c, f_asm):
 	ax.set_xticks(ind+width)
 	ax.set_xlabel(u'Tamaño de imagen')
 	ax.set_xticklabels( ('10') )
-	#ax.set_ylim([0, 60])
 
 	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=2 )
 
