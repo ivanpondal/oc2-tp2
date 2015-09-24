@@ -4,10 +4,10 @@
 #include "../tp2.h"
 
 // Constante con número de versión de implementación a usar
-#define IMP_BLUR_C 0
+#define IMP_BLUR_C 1
 
-void blur_v1(unsigned char *src, unsigned char *dst, int cols, int filas, float sigma, int radius);
-void blur_v2(unsigned char *src, unsigned char *dst, int cols, int filas, float sigma, int radius);
+void blur_c_v1(unsigned char *src, unsigned char *dst, int cols, int filas, float sigma, int radius);
+void blur_c_v2(unsigned char *src, unsigned char *dst, int cols, int filas, float sigma, int radius);
 
 float g_sigma(float sigma, int x, int y){
 	//aplico la funcion de densidad guassiana a los parametros
@@ -28,18 +28,18 @@ float* kernel_matrix(float sigma, int radio){
 
 void blur_c(unsigned char *src, unsigned char *dst, int cols, int filas, float sigma, int radius){
 	switch(IMP_BLUR_C){
-		case 0:
-			blur_v1(src, dst, cols, filas, sigma, radius);
-			break;
 		case 1:
-			blur_v2(src, dst, cols, filas, sigma, radius);
+			blur_c_v1(src, dst, cols, filas, sigma, radius);
+			break;
+		case 2:
+			blur_c_v2(src, dst, cols, filas, sigma, radius);
 			break;
 	}
 }
 
 
 // Implementación usando el kernel como matriz
-void blur_v2(unsigned char *src, unsigned char *dst, int cols, int filas, float sigma, int radius){
+void blur_c_v2(unsigned char *src, unsigned char *dst, int cols, int filas, float sigma, int radius){
 	int bytes_in_row = cols*4;
 	int m = 2*radius + 1;
 	unsigned char (*src_matrix)[bytes_in_row] = (unsigned char (*)[bytes_in_row]) src;
@@ -68,7 +68,7 @@ void blur_v2(unsigned char *src, unsigned char *dst, int cols, int filas, float 
 }
 
 // Implementación usando el kernel como vector
-void blur_v1    (
+void blur_c_v1    (
     unsigned char *src,
     unsigned char *dst,
     int cols,

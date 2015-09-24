@@ -15,6 +15,7 @@ section .data
 	mask_copy_0_float:		DB 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3
 
 section .text
+
 ;void blur_asm    (
 	;unsigned char *src, (rdi)
 	;unsigned char *dst, (rsi)
@@ -22,8 +23,17 @@ section .text
 	;int cols, (ecx)
     ;float sigma, (xmm0)
     ;int radius) (r8d)
-
 blur_asm:
+	push rbp
+
+	; Llamo a la versión de implementación con la que quiero experimentar
+	call blur_asm_v1
+
+	pop rbp
+	ret
+
+; Implementación operando con float
+blur_asm_v1:
 	push rbp
 	sub rsp, 8
 	push rdx	; filas
@@ -32,8 +42,8 @@ blur_asm:
 
 	mov r12, rdi	; r12 = puntero a imagen original
 	mov r13, rsi	; r13 = puntero a imagen destino
-	mov r14d, edx
-	mov rbp, r8
+	mov r14d, edx	; r14d = filas
+	mov rbp, r8		; rbp = radio
 
 	mov edi, ebp
 	call gauss_matrix
