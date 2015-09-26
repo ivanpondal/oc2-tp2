@@ -37,7 +37,7 @@ def barplot_blur(f_c, f_asm):
 	ax.set_xticklabels( ('10') )
 	ax.set_ylim([0, 60])
 
-	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=2 )
+	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=1 )
 
 	def autolabel(rects):
 	  # attach some text labels
@@ -54,11 +54,11 @@ def barplot_blur(f_c, f_asm):
 def barplot_diff(f_c, f_asm):
 	N = 1
 
-	times_c = [fileTolist(f_c)]
+	times_c = fileTolist(f_c)
 
 
-	cMeans = [trim_mean(x, 0.25) for x in times_c]
-	cStd =   [np.std(x) for x in times_c]
+	cMeans = [trim_mean(times_c, 0.25)]
+	cStd =   [np.std(times_c)]
 
 	ind = np.arange(N)  # the x locations for the groups
 	width = 0.35       # the width of the bars
@@ -70,8 +70,8 @@ def barplot_diff(f_c, f_asm):
 	times_asm = fileTolist(f_asm)
 
 
-	asmMeans = [trim_mean(x, 0.25) for x in times_asm]
-	asmStd =   [np.std(x) for x in times_asm]
+	asmMeans = [trim_mean(times_asm, 0.25)]
+	asmStd =   [np.std(times_asm)]
 
 	rects2 = ax.bar(ind+width, asmMeans, width, color='y', yerr=asmStd, log=False)
 
@@ -82,7 +82,7 @@ def barplot_diff(f_c, f_asm):
 	ax.set_xlabel(u'Tamaño de imagen')
 	ax.set_xticklabels( ('10') )
 
-	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=2 )
+	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=1 )
 
 	def autolabel(rects):
 	  # attach some text labels
@@ -103,7 +103,7 @@ def diff_histogram(f):
 	diff_summary = fileTolist(f)
 
 	ind = np.arange(N)  # the x locations for the groups
-	width = 0.80      # the width of the bars
+	width = 0.95     # the width of the bars
 
 	fig, ax = plt.subplots()
 	rects1 = ax.bar(ind, diff_summary, width, edgecolor='none')
@@ -115,16 +115,12 @@ def diff_histogram(f):
 	ax.set_xlabel(u'Brecha')
 	ax.set_xticklabels(np.arange(0, 255, 20))
 
-	# def autolabel(rects):
-	#   # attach some text labels
-	#   for rect in rects:
-	#       height = rect.get_height()
-	#       ax.text(rect.get_x()+rect.get_width()/2., 1.05*height, '%.1f'%(round(height,2)),
-	#               ha='center', va='bottom')
-
-	# autolabel(rects1)
-
 	plt.savefig('diff_histogram.pdf')
+
+
+#def lineplot_diff(f_c, f_asm, tamaños):
+#	times_c = [fileTolist(x) for x in f_c]
+#	times_asm = [fileTolist(x) for x in f_asm]
 
 def fileTolist(f):
 	fobj = open(f, "r")
@@ -140,3 +136,5 @@ elif argv[1] == "barplot_diff":
 	barplot_diff(argv[2], argv[3])
 elif argv[1] == "diff_histogram":
 	diff_histogram(argv[2])
+#elif argv[1] == "lineplot_diff":
+#	lineplot_diff(argv[2], argv[3], argv[4])

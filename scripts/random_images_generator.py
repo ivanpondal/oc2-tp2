@@ -1,10 +1,13 @@
 import Image
 from itertools import product
 from random import randint, seed
+from sys import argv
 
-img = Image.new('RGB', (128, 128), 'white')
-seed(100)
-for x,y in product(xrange(128),xrange(128)):
+size = int(argv[1])
+
+img = Image.new('RGB', (size, size), 'white')
+seed(200)
+for x,y in product(xrange(size),xrange(size)):
     img.putpixel((x, y), (randint(0, 255), randint(0, 255), randint(0, 255)))
 ## change the first parameter
-img.save('128x128(1).bmp', 'BMP')
+img.save(str(size) + 'x' + str(size) + '.bmp', 'BMP')
