@@ -1,0 +1,23 @@
+El objetivo de este trabajo fue estudiar e implementar en una aplicación real el
+modelo de procesamiento SIMD (Single Instruction Multiple Data). Para esto se
+nos encomendó la tarea de desarrollar en C y ASM (Intel64) dos filtros de
+imágenes con los cuales debíamos por un lado analizar cómo competían las
+implementaciones y por otro lado realizar un experimento adicional en base al
+trabajo ya hecho con el fin de profundizar el estudio del mismo.
+
+Los filtros en cuestión fueron \textit{Diferencia de Imágenes} y \textit{Blur
+Gaussiano}. El primero, dado dos imágenes del mismo tamaño, genera una imagen de salida
+en escala de grises donde las partes similares o iguales entre las dos entradas
+se verán oscuras o negras, mientras que las que difieran, aparecerán más
+blancas. El segundo, dada una imagen, un sigma y un radio, genera una imágen
+desenfocada en base a los parámetros de entrada.
+
+Para \textit{Diferencia de Imágenes}, se realizó el estudio de rendimiento entre
+la implementación en C y la de ASM utilizando SIMD. En lo que respecta
+\textit{Blur Gaussiano}, también se hizo la prueba de performance entre
+implementaciones con la diferencia de que en C realizamos dos códigos distintos
+donde uno presenta una optimización vinculada con la forma en la que calcula
+la convolución necesaria para el efecto. A su vez, decidimos experimentar con el
+balance entre performance y precisión del filtro, para lo cual desarrollamos
+una segunda implementación en ASM con la que buscamos procesar más datos en
+simultáneo sacrificando precisión en las cuentas.
