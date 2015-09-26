@@ -7,4 +7,4 @@ seed(100)
 for x,y in product(xrange(128),xrange(128)):
     img.putpixel((x, y), (randint(0, 255), randint(0, 255), randint(0, 255)))
 ## change the first parameter
-img.save('128x128.bmp', 'BMP')
+img.save('128x128(1).bmp', 'BMP')
