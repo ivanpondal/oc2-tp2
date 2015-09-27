@@ -9,8 +9,8 @@ Los filtros en cuestión fueron \textit{Diferencia de Imágenes} y \textit{Blur
 Gaussiano}. El primero, dado dos imágenes del mismo tamaño, genera una imagen de salida
 en escala de grises donde las partes similares o iguales entre las dos entradas
 se verán oscuras o negras, mientras que las que difieran, aparecerán más
-blancas. El segundo, dada una imagen, un sigma y un radio, genera una imágen
-desenfocada en base a los parámetros de entrada.
+blancas. El segundo, dada una imagen, un coeficiente real $\sigma$ y un \textit{r}
+entero, genera una imágen desenfocada en base a los parámetros de entrada.
 
 Para \textit{Diferencia de Imágenes}, se realizó el estudio de rendimiento entre
 la implementación en C y la de ASM utilizando SIMD. En lo que respecta
