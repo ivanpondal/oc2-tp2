@@ -1,0 +1,5 @@
+../times/test1.c.txt ../times/test1.asm.txt 32
+../times/test2.c.txt ../times/test2.asm.txt 64
+../times/test3.c.txt ../times/test3.asm.txt 128
+../times/test4.c.txt ../times/test4.asm.txt 256
+../times/test5.c.txt ../times/test5.asm.txt 512
