@@ -249,11 +249,7 @@ def diff_histogram(f):
 	#No quiero considerar las componentes que difieren 0 porque están muy
 	#"viciadas" por los bordes y las componentes de transparencia (que 
 	# siempre valen 255 porque estoy usando escala de grises)
-	#Además divido por 3 todas las diferencias, porque al usar escala de grises
-	#se que si dos pixeles difieren en una componente en x unidades, entonces
-	#difieren en todas las componentes (salvo a) en x unidades.
 	diff_summary.pop(0)
-	diff_summary = map(lambda x: x/3, diff_summary)
 
 	ind = np.arange(1, N)  # the x locations for the groups
 	width = 0.95     # the width of the bars
