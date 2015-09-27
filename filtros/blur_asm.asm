@@ -55,6 +55,12 @@ blur_asm:
 ; Implementación operando con float
 blur_asm_v1:
 	push rbp
+	mov rbp,rsp
+	pop r12
+	pop r13
+	pop r14
+	pop r15
+	pop rbx	
 	sub rsp, 8
 	push rdx	; filas
 	push rcx	; columnas
@@ -193,6 +199,11 @@ blur_asm_v1:
 	call free
 
 	add rsp, 32
+	pop rbx
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbp
     ret
 
@@ -317,6 +328,11 @@ gauss_2d:
 blur_asm_v2:
 	push rbp
 	mov rbp,rsp
+	pop r12
+	pop r13
+	pop r14
+	pop r15
+	pop rbx	
 	sub rsp, 8
 	push rdx	; filas
 	push rcx	; columnas
@@ -483,6 +499,11 @@ blur_asm_v2:
 	call free
 
 	add rsp, 32
+	pop rbx	
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbp
     ret
 
@@ -490,6 +511,11 @@ blur_asm_v2:
 blur_asm_v3:
 	push rbp
 	mov rbp,rsp
+	pop r12
+	pop r13
+	pop r14
+	pop r15
+	pop rbx	
 	sub rsp, 8
 	push rdx	; filas
 	push rcx	; columnas
@@ -591,8 +617,11 @@ blur_asm_v3:
 		.ultimofila:
 		; Proceso pixel i y pixel_i+1
 		movd xmm8, [r12]		; xmm8 = px_i
-		movd xmm9, [rdi]		; xmm9 = g_i
-		
+		push r9
+		xor r9,r9
+		mov r9w,[rdi]
+		movd xmm9, r9d		; xmm9 = g_i
+		pop r9
 		movdqu xmm11, [mask_pixel_1_to_short] ; <-- mitad baja con pixels pasados a short
 		movdqu xmm12, [mask_copy_1] ; <-- mitad baja con 4 g_is
 
@@ -638,7 +667,7 @@ blur_asm_v3:
 		xor r10, r10	; x_m = 0
 		mov eax, r11d
 		xor rdx, rdx
-		div r8d			; y_m/n ;ARREGLAR
+		div r8d			; y_m/n
 
 		cmp edx, 0
 
@@ -712,5 +741,11 @@ blur_asm_v3:
 	call free
 
 	add rsp, 32
+	pop rbx
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbp
     ret
+
