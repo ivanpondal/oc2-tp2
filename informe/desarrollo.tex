@@ -60,5 +60,46 @@ Aquí desarrollaremos en detalle sobre la primer implementación en ASM, la de
 control, cuya característica principal es mediante SIMD procesar de a pixeles
 enteros las operaciones necesarias.
 
+A grandes rasgo lo que el código lo que hará es ir aplicando la matriz de convolución a los pixeles que
+componen la imagen de izquierda a derecha, de abajo hacia
+arriba en la imagen.
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|ccc|}
+		\hline
+		$\longrightarrow$ & $\longrightarrow$ & $\longrightarrow$ \\ \hline
+		$\longrightarrow$ & $\longrightarrow$ & $\uparrow$ \\ \hline
+		$\longrightarrow$ & $\longrightarrow$ & $\uparrow$ \\ \hline
+		$\longrightarrow$ & $\longrightarrow$ & $\uparrow$ \\ \hline
+		$\longrightarrow$ & $\longrightarrow$ & $\uparrow$ \\ \hline
+	\end{tabular}
+	\caption{Orden de procesamiento}
+\end{table}
+
+Como vamos de abajo hacia arriba, de izquierda a derecha, comenzaremos ubicando
+nuestra matriz de convolución en la esquina inferior izquierda de la imagen,
+pero primero definamos algunas variables.
+
+\begin{equation*}
+	\begin{aligned}[c]
+		I = \text{Imagen entrada} \\
+		0 \leq x_I < ancho(I) \\
+		0 \leq y_I < alto(I) \\
+	\end{aligned}
+	\qquad
+	\begin{aligned}[c]
+		K = \text{Kernel (matriz de convolución)} \\
+		0 \leq x_K < ancho(K) \\
+		0 \leq y_K < alto(K) \\
+	\end{aligned}
+	\qquad
+	\begin{aligned}[c]
+		D = \text{Imagen destino} \\
+		0 \leq x_D < ancho(D) \\
+		0 \leq y_D < alto(D) \\
+	\end{aligned}
+\end{equation*}
+
 \subsubsection{Implementación experimental}
 
