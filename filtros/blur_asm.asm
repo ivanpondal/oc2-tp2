@@ -486,8 +486,6 @@ blur_asm_v2:
 	pop rbp
     ret
 
-
-
 ; Implementación operando con unsigned short
 blur_asm_v3:
 	push rbp
@@ -564,14 +562,11 @@ blur_asm_v3:
 
 	inc r8d				; r8d = radio + 1
 	
-	
-;ANALIZAR ESTO
-
 	.convolucion:
 
 		; Proceso pixel_i y pixel_i+1		
 		
-		cmp edi,r14d
+		cmp r10d,r14d			; ¿estoy en el ultimo elemento de la fila del kernel?
 		je .ultimofila
 		movd xmm8, [r12]		; xmm8 = px_i
 		PSLLDQ xmm8,8
@@ -580,7 +575,7 @@ blur_asm_v3:
 
 		movd xmm9, [rdi]		; xmm9 = g_i
 		PSLLDQ xmm9,8
-		lea rdi, [rdi + 4]
+		lea rdi, [rdi + 2]
 		movd xmm9, [rdi]		; xmm9 = | 0 | 0 | 0 | g_i | 0 | 0 | 0 | g_i+1 |
 		
 		movdqu xmm11, [mask_pixel_0_to_short] ; Una mitad con g_i y la otra con g_i+1
@@ -596,7 +591,6 @@ blur_asm_v3:
 		.ultimofila:
 		; Proceso pixel i y pixel_i+1
 		movd xmm8, [r12]		; xmm8 = px_i
-
 		movd xmm9, [rdi]		; xmm9 = g_i
 		
 		movdqu xmm11, [mask_pixel_1_to_short] ; <-- mitad baja con pixels pasados a short
@@ -607,15 +601,18 @@ blur_asm_v3:
 		PMULLW xmm8, xmm9	; xmm8 = producto entre los de arriba
 		PADDW xmm10, xmm8
 
-
 		.sigo:
 		
 		;preparo los punteros para la siguiente iteracion
 		lea r12, [r12 + 4]
-		lea rdi, [rdi + 4]
+		lea rdi, [rdi + 2]
 
 
 		inc r10d	; x_m++
+
+		xor r8,r8
+		mov r8d,r14d	;r8d = radio
+		inc r8d			; r8d = radio+1
 
 		mov eax, r10d
 		xor rdx, rdx
@@ -634,17 +631,28 @@ blur_asm_v3:
 		mov edx, eax
 		sub r12, rdx
 
+		shl r8d,1		; r8d = 2*radio + 2
+		sub r8d,1		; r8d = 2*radio + 1
+
+
 		xor r10, r10	; x_m = 0
 		mov eax, r11d
 		xor rdx, rdx
-		div r8d			; y_m/n
+		div r8d			; y_m/n ;ARREGLAR
+
 		cmp edx, 0
+
 		; Si todavía no recorrí todas las filas de la matriz de convolución, sigo
 		jne .convolucion
 		; Terminé la convolución para un pixel, ahora lo guardo
+
+		inc r8d			; r8d = 2*radio + 2
+		shr r8d,1		; r8d = radio + 1
+
+
 		xor r11, r11		; y_m = 0
 
-		MOVUPS xmm7,xmm10
+		MOVDQU xmm7,xmm10
 		PSLLDQ xmm7,8
 		PADDW xmm10, xmm7
 
@@ -666,9 +674,7 @@ blur_asm_v3:
 		shl rbp, 2
 		add r12, rbp		; r12 + radio*4 (tamaño de pixel)
 
-
 		movd [r12], xmm10	; Guardo pixel resultante
-
 
 
 		inc r15d			; x++
