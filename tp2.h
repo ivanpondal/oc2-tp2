@@ -59,6 +59,7 @@ typedef struct configuracion_t
 	char *archivo_entrada;
 	char *archivo_entrada_2;
 	char  archivo_salida[255];
+	char *tiempos_salida; //Agregado por nosotros
 	char *carpeta_salida;
 	char *extra_archivo_salida;
 	bool es_video;

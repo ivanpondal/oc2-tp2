@@ -20,6 +20,18 @@
 \usepackage{wrapfig}
 \usepackage{caption}
 
+% facilitates the creation of memory maps. Start address at the bottom, end address at the top.
+% syntax: \memsection{end address}{start address}{height in lines}{text in box}
+\newcommand{\memsection}[4]{
+\bytefieldsetup{bitheight=#3\baselineskip}    % define the height of the memsection
+\bitbox[]{10}{
+\texttt{#1}     % print end address
+\\ \vspace{#3\baselineskip} \vspace{-2\baselineskip} \vspace{-#3pt} % do some spacing
+\texttt{#2} % print start address
+}
+\bitbox{16}{#4} % print box with caption
+}
+
 
 %%fancyhdr
 \pagestyle{fancy}

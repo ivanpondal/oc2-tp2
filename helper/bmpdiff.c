@@ -19,6 +19,7 @@ typedef struct s_options {
     int image;
     int help;
     int summaryop;
+    char* output_file;
     int* summary;
     char* file1;
     char* file2;
@@ -94,7 +95,6 @@ int main(int argc, char* argv[]){
         printf("ERROR: (%i) bitcount distinto de 24 o 32\n", c1);
         return -1;
     }
-
     // (4) crear imagenes de diferencias
     BMP *bmpDiffR, *bmpDiffG, *bmpDiffB, *bmpDiffA;
     bmpDiffR = bmp_copy(bmp1, 0);
@@ -114,7 +114,6 @@ int main(int argc, char* argv[]){
     if (c1 == 32) {
         dataA = bmp_data(bmpDiffA);
     }
-
     // (6) calcular diferencias
     if (c1 == 32) {
         for(j=0;j<h1;j++) {
@@ -178,11 +177,11 @@ int main(int argc, char* argv[]){
 
     // (7) mostrar summary
     if(opt.summaryop) {
-        for(i=1;i<256;i++) {
-            if(opt.summary[i]!=0) {
-                printf("%i\t%i\n", i, opt.summary[i]);
-            }
-        }
+     FILE *pfile = fopen(opt.output_file, "w");
+     for(i=0;i<256;i++) {
+         fprintf(pfile, "%i\n", opt.summary[i]);
+     }
+     fclose(pfile);
     }
 
     // (8) guardar resultados
@@ -249,11 +248,11 @@ void print_help(char* name) {
     printf ( "    indica en gris el valor de la diferencia, donde negro es sin \n" );
     printf ( "    diferencias y blanco es diferencia en 1.\n" );
     printf ( "\n" );
-    printf ( "    -h, --help       Imprime esta ayuda\n" );
-    printf ( "    -a, --value      Valor de la diferencia en la imagen\n" );
-    printf ( "    -v, --verbose    Ejecuta en verbose mostrando las diferencias\n" );
-    printf ( "    -s, --summary    Muestra un resumen de diferencias\n" );
-    printf ( "    -i, --image      Genera Imagenes de diferencias\n" );
+    printf ( "    -h, --help       		 Imprime esta ayuda\n" );
+    printf ( "    -a, --value      		 Valor de la diferencia en la imagen\n" );
+    printf ( "    -v, --verbose    		 Ejecuta en verbose mostrando las diferencias\n" );
+    printf ( "    -s, --summary  OUTPUT_FILE   Guarda un resumen de diferencias en OUTPUT_FILE\n" );
+    printf ( "    -i, --image      		 Genera Imagenes de diferencias\n" );
 }
 
 int read_options(int argc, char* argv[], options* opt) {
@@ -263,6 +262,7 @@ int read_options(int argc, char* argv[], options* opt) {
     opt->help = 0;
     opt->file1 = 0;
     opt->file2 = 0;
+    opt->output_file = NULL;
     opt->image = 0;
     opt->summaryop = 0;
     int i, optionals = 0;
@@ -285,7 +285,9 @@ int read_options(int argc, char* argv[], options* opt) {
         }
         if (!strcmp(argv[i], "-s") || !strcmp(argv[i], "--summary")) {
             opt->summaryop = 1;
-            optionals++;
+            i++;
+            opt->output_file = argv[i];
+            optionals+=2;
         }
     }
     if (argc - 1 - optionals != 3) {

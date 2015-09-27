@@ -75,6 +75,9 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
              config->carpeta_salida, basename(config->archivo_entrada),
              config->nombre_filtro,  C_ASM(config), config->extra_archivo_salida );
 
+	FILE* pfile;
+	if(config->tiempos_salida != NULL) pfile = fopen(config->tiempos_salida, "w");
+
 	if (config->nombre)
 	{
 		printf("%s\n", basename(config->archivo_salida));
@@ -82,14 +85,19 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
 	else
 	{
 		imagenes_abrir(config);
-		unsigned long long start, end;
+		unsigned long long start, end, startit, endit;
 		MEDIR_TIEMPO_START(start)
 		for (int i = 0; i < config->cant_iteraciones; i++) {
-				aplicador(config);
+			MEDIR_TIEMPO_START(startit)
+			aplicador(config);
+			MEDIR_TIEMPO_STOP(endit)
+			if(config->tiempos_salida != NULL) fprintf(pfile, "%llu\n", endit-startit);
 		}
 		MEDIR_TIEMPO_STOP(end)
+		if(config->tiempos_salida != NULL) fclose(pfile);
 		imagenes_guardar(config);
 		imagenes_liberar(config);
 		imprimir_tiempos_ejecucion(start, end, config->cant_iteraciones);
+		if(config->tiempos_salida != NULL) printf("  Archivo con los tiempos de cada iteración: %s\n", config->tiempos_salida);
 	}
 }

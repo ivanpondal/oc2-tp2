@@ -45,9 +45,10 @@ void procesar_opciones(int argc, char **argv, configuracion_t *config)
 	config->archivo_entrada_2 = NULL;
 	config->carpeta_salida = ".";
 	config->extra_archivo_salida = "";
+	config->tiempos_salida = NULL; //Agregado por nosotros
 
 	// extraemos opciones de la linea de comandos
-	const char* const op_cortas = "hi:vt:fo:wn";
+	const char* const op_cortas = "hi:vt:fo:wn:l:";
 
 	const struct option op_largas[] = {
 		{ "help", 0, NULL, 'h' },
@@ -58,6 +59,7 @@ void procesar_opciones(int argc, char **argv, configuracion_t *config)
 		{ "frames", 0, NULL, 'f' },
 		{ "nombre", 0, NULL, 'n' },
 		{ "output", 1, NULL, 'o' },
+		{ "list_times", 0, NULL, 'l'},
 		{ NULL, 0, NULL, 0 }
 	};
 
@@ -97,6 +99,9 @@ void procesar_opciones(int argc, char **argv, configuracion_t *config)
 			case 'w' : /* -w o --video */
 			    config->es_video = true;
 			    break;
+			case 'l': /* -l o --list_times */
+				config->tiempos_salida = optarg; //Agregado por nosotros
+				break;
 			case '?' : /* opcion no valida */
 				imprimir_ayuda (argv[0]);
 				exit ( EXIT_SUCCESS );
@@ -201,5 +206,13 @@ void imprimir_ayuda ( char *nombre_programa) {
 	printf ( "                   "
 	         "Imprime información adicional\n" );
 	printf ( "\n" );
+		printf ( "    -l, --list_times ARCHIVO_SALIDA\n");
+	printf ( "                                   "
+	         "Mide el tiempo que tarda en ejecutar cada iteración\n"
+	         "                                   "
+	         " y devuelve la lista descendente con los tiempos en \n"
+	         "                                   "
+	         "ARCHIVO_SALIDA\n");
+	printf("\n");
 
 }
