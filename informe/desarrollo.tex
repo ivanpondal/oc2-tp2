@@ -108,7 +108,7 @@ inferior izquierda de la imagen para lo cual vamos a definir algunas variables.
 
 Por la forma en que cargamos la imagen a memoria, el puntero a la misma comienza
 apuntando el primer pixel desde la izquierda en la última fila. Por lo tanto
-vamos a decir que la esquina inferior izquierda es $I_{00}$ y la esquina
+vamos a decir que la esquina inferior izquierda es $I_{0,0}$ y la esquina
 superior derecha $I_{alto(I)-1,4*ancho(I)-1}$.
 
 Para comenzar en nuestro estado inicial queremos superponer $K$ en nuestra
@@ -136,8 +136,8 @@ mismo para facilitar la explicación.
 			\caption{XMM$_A$}
 		\end{table}
 	\item Ahora cargaremos de $I_{2*r,0}$ un pixel (4 bytes) a otro XMM que
-		llamaremos XMM$_I$. Es importante destacar que los pixeles en memoria
-		estarán al revés (BGRA en lugar de ARGB).
+		llamaremos XMM$_I$ mediante \textbf{movd}. Es importante destacar que
+		los pixeles en memoria estarán al revés (BGRA en lugar de ARGB).
 		\begin{table}[H]
 			\centering
 			\begin{tabular}{|*{4}{C{30pt}|}}
@@ -147,18 +147,67 @@ mismo para facilitar la explicación.
 				42 & 42 & 42 & 0 \\ \hline
 				\multicolumn{4}{|c|}{32 bits} \\ \hline
 			\end{tabular}
-			\caption{Pixel $I_{2*r,0}$ = (0, 42, 42, 42) = (A, R, G, B)}
+			\caption{Pixel $I_{2*r,0}$}
+		\end{table}
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{16}{C{18pt}|}}
+				\cline{13-16} \multicolumn{12}{c|}{} & A & R & G & B \\ \hline
+				- & - & - & - & - & - & - & - &- & - & - & - & 0 & 42 & 42 & 42 \\ \hline
+				byte 15 & \multicolumn{11}{|c|}{$\dots$} & byte 3 & byte 2 & byte 1 & byte 0 \\ \hline
+				\multicolumn{16}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_I$}
+		\end{table}
+	\item Cargamos de $K_{0,0}$ sólo el primer coeficiente a otro XMM que llamaremos
+		XMM$_K$ mediante \textbf{movd}.
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|C{64pt}|}
+				\hline
+				$K_{0,0}$ \\ \hline
+				0.42 \\ \hline
+				32 bits \\ \hline
+			\end{tabular}
+			\caption{Coeficiente $K_{0,0}$}
+		\end{table}
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{4}{C{64pt}|}}
+				\cline{4-4} \multicolumn{3}{c|}{} & $K_{0,0}$ \\ \hline
+				- & - & - & 0.42 \\ \hline
+				float 3 & float 2 & float 1 & float 0 \\ \hline
+				\multicolumn{4}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_K$}
+		\end{table}
+	\item Ahora queremos pasar nuestros 4 bytes en XMM$_I$ a 4 ints para luego
+		poder convertirlos a float y operar con ellos. Para esto usamos
+		\textbf{pshufb} con la siguiente máscara:
+
+		\textit{DB 0, 128, 128, 128, 1, 128, 128, 128, 2, 128, 128, 128, 3, 128, 128, 128}
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{16}{C{18pt}|}}
+				\cline{13-16} \multicolumn{12}{c|}{} & A & R & G & B \\ \hline
+				- & - & - & - & - & - & - & - &- & - & - & - & 0 & 42 & 42 & 42 \\ \hline
+				\multicolumn{16}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_I$ antes de ejecutar \textbf{psshufb}}
 		\end{table}
 
 		\begin{table}[H]
 			\centering
 			\begin{tabular}{|*{16}{C{18pt}|}}
 				\hline
-				- & - & - & - & - & - & - & - &- & - & - & - & 0 & 42 & 42 & 42 \\ \hline
-				byte 15 & \multicolumn{11}{|c|}{$\dots$} & byte 3 & byte 2 & byte 1 & byte 0 \\ \hline
+				\multicolumn{4}{|c|}{A} & \multicolumn{4}{|c|}{R} & \multicolumn{4}{|c|}{G} & \multicolumn{4}{|c|}{B} \\ \hline
+				0 & 0 & 0 & 0 & 0 & 0 & 0 & 42 & 0 & 0 & 0 & 42 & 0 & 0 & 0 & 42 \\ \hline
 				\multicolumn{16}{|c|}{128 bits} \\ \hline
 			\end{tabular}
-			\caption{XMM$_I$}
+			\caption{XMM$_I$ después de ejecutar \textbf{psshufb}}
 		\end{table}
 
 \end{enumerate}
