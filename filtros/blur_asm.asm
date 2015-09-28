@@ -198,9 +198,7 @@ blur_asm_v1:
 	pop rdi		; Libero la memoria usada por la matriz
 	call free
 
-	pop r8
-	pop rcx
-	pop rdx
+	add rsp, 24 ;r8, rcx y rdx no me importan
 	pop rbx
 	pop r15
 	pop r14
@@ -212,6 +210,7 @@ blur_asm_v1:
 ; rdi, xmm0
 gauss_matrix:
 	push rbp
+	mov rbp, rsp
 	push r12
 	push r13
 	push r14
