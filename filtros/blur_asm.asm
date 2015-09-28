@@ -46,9 +46,9 @@ blur_asm:
 	mov rbp, rsp
 
 	; Llamo a la versión de implementación con la que quiero experimentar
-	call blur_asm_v1
+	;call blur_asm_v1
 	;call blur_asm_v2
-	;call blur_asm_v3
+	call blur_asm_v3
 
 	pop rbp
 	ret
@@ -334,11 +334,10 @@ blur_asm_v2:
 	push r14
 	push r15
 	push rbx
-	sub rsp, 8
 	push rdx	; filas
 	push rcx	; columnas
 	push r8		; radio
-
+	
 	mov r12, rdi	; r12 = puntero a imagen original
 	mov r13, rsi	; r13 = puntero a imagen destino
 	mov r14d, ecx	; r14d = columnas
@@ -359,6 +358,7 @@ blur_asm_v2:
 	
 	call malloc
 	push rax		; guardo el puntero al inicio del kernel
+	sub rsp,8		; alineo
 
 	xor rdi,rdi
 	mov edi, ebx	; antes de llamar a kernel paso n = 2*radio+1
@@ -367,9 +367,10 @@ blur_asm_v2:
 	mov rdx, rax	; antes de llamar a kernel paso el puntero a la matriz
 	
 	call kernel_impreciso_uint
-	pop	 rdi		; rdi = puntero al kernel
-	push rdi		; vuelvo a guardar en la pila el puntero al kernel
-
+	add rsp, 8
+	pop rdi		; rdi = puntero al kernel
+	push rdi	; vuelvo a guardar en la pila el puntero al kernel
+			; no es necesario volver a alinear porque no llamare a ninguna funcion nueva
 	xor rcx,rcx
 	mov ecx,eax 	; ecx = exponente de la potencia de 2
 
@@ -497,9 +498,10 @@ blur_asm_v2:
 		; Si no terminé de procesar todas las filas de la imagen, sigo
 		jne .convolucion
 	pop rdi		; Libero la memoria usada por la matriz
+				; Queda alineada la pila
 	call free
 
-	add rsp, 32
+	add rsp, 24
 	pop rbx	
 	pop r15
 	pop r14
@@ -517,7 +519,6 @@ blur_asm_v3:
 	push r14
 	push r15
 	push rbx	
-	sub rsp, 8
 	push rdx	; filas
 	push rcx	; columnas
 	push r8		; radio
@@ -541,7 +542,8 @@ blur_asm_v3:
 	mov rdi,rdx
 	
 	call malloc
-	push rax		; guardo el puntero al inicio del kernel
+	push rax		; guardo el puntero al kernel
+	sub rsp,8		; alineo
 
 	xor rdi,rdi
 	mov edi, ebx	; antes de llamar a kernel paso n = 2*radio+1
@@ -550,6 +552,7 @@ blur_asm_v3:
 	mov rdx, rax	; antes de llamar a kernel paso el puntero a la matriz
 	
 	call kernel_impreciso_ushort
+	add rsp,8		; me preparo para el pop
 	pop	 rdi		; rdi = puntero al kernel
 	push rdi		; vuelvo a guardar en la pila el puntero al kernel
 
@@ -739,9 +742,10 @@ blur_asm_v3:
 		; Si no terminé de procesar todas las filas de la imagen, sigo
 		jne .convolucion
 	pop rdi		; Libero la memoria usada por la matriz
+				; Queda alineada la pila
 	call free
 
-	add rsp, 32
+	add rsp, 24
 	pop rbx
 	pop r15
 	pop r14
@@ -749,4 +753,3 @@ blur_asm_v3:
 	pop r12
 	pop rbp
     ret
-
