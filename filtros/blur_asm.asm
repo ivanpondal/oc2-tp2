@@ -43,11 +43,12 @@ section .text
     ;int radius) (r8d)
 blur_asm:
 	push rbp
+	mov rbp, rsp
 
 	; Llamo a la versión de implementación con la que quiero experimentar
-	;call blur_asm_v1
+	call blur_asm_v1
 	;call blur_asm_v2
-	call blur_asm_v3
+	;call blur_asm_v3
 
 	pop rbp
 	ret
@@ -55,7 +56,12 @@ blur_asm:
 ; Implementación operando con float
 blur_asm_v1:
 	push rbp
-	sub rsp, 8
+	mov rbp,rsp
+	push r12
+	push r13
+	push r14
+	push r15
+	push rbx
 	push rdx	; filas
 	push rcx	; columnas
 	push r8		; radio
@@ -192,7 +198,14 @@ blur_asm_v1:
 	pop rdi		; Libero la memoria usada por la matriz
 	call free
 
-	add rsp, 32
+	pop r8
+	pop rcx
+	pop rdx
+	pop rbx
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbp
     ret
 
@@ -317,6 +330,11 @@ gauss_2d:
 blur_asm_v2:
 	push rbp
 	mov rbp,rsp
+	push r12
+	push r13
+	push r14
+	push r15
+	push rbx
 	sub rsp, 8
 	push rdx	; filas
 	push rcx	; columnas
@@ -393,8 +411,8 @@ blur_asm_v2:
 
 		pshufb xmm8, xmm11	; xmm0 = [alpha|blue|green|red] px_i
 		pshufb xmm9, xmm12
-		PMULLD xmm8, xmm9
-		PADDD xmm10, xmm8 ;probar con PADDUSB o PADDD
+		pmulld xmm8, xmm9
+		paddd xmm10, xmm8 ;probar con PADDUSB o PADDD
 
 		; Preparo punteros para el siguiente pixel
 		lea r12, [r12 + 4]
@@ -429,7 +447,7 @@ blur_asm_v2:
 
 		pxor xmm5,xmm5
 		vmovq xmm5,rcx
-		PSRLD xmm10,xmm5
+		psrld xmm10,xmm5
 		pshufb xmm10, [mask_int_to_pixel_0]
 
 		mov r12, r13		; cargo puntero a pos en imagen
@@ -483,6 +501,11 @@ blur_asm_v2:
 	call free
 
 	add rsp, 32
+	pop rbx	
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbp
     ret
 
@@ -490,6 +513,11 @@ blur_asm_v2:
 blur_asm_v3:
 	push rbp
 	mov rbp,rsp
+	push r12
+	push r13
+	push r14
+	push r15
+	push rbx	
 	sub rsp, 8
 	push rdx	; filas
 	push rcx	; columnas
@@ -569,12 +597,12 @@ blur_asm_v3:
 		cmp r10d,r14d			; ¿estoy en el ultimo elemento de la fila del kernel?
 		je .ultimofila
 		movd xmm8, [r12]		; xmm8 = px_i
-		PSLLDQ xmm8,8
+		pslldq xmm8,8
 		lea r12, [r12 + 4]
 		movd xmm8, [r12]		; xmm8 = | 0 | 0 | px_i | 0 | 0 | px_i+1|
 
 		movd xmm9, [rdi]		; xmm9 = g_i
-		PSLLDQ xmm9,8
+		pslldq xmm9,8
 		lea rdi, [rdi + 2]
 		movd xmm9, [rdi]		; xmm9 = | 0 | 0 | 0 | g_i | 0 | 0 | 0 | g_i+1 |
 		
@@ -583,23 +611,26 @@ blur_asm_v3:
 
 		pshufb xmm8, xmm11	; xmm8 = [alpha_i|blue_i|green_i|red_i|alpha_i+1|blue_i+1|green_i+1|red_i+1]
 		pshufb xmm9, xmm12	; xmm9 = [g_i	|g_i	|g_i	|g_i	|g_i+1	|g_i+1	|g_i+1	|g_i+1	]	
-		PMULLW xmm8, xmm9	; xmm8 = producto entre los de arriba
-		PADDW xmm10, xmm8
+		pmullw xmm8, xmm9	; xmm8 = producto entre los de arriba
+		paddw xmm10, xmm8
 
 		jmp .sigo
 
 		.ultimofila:
 		; Proceso pixel i y pixel_i+1
 		movd xmm8, [r12]		; xmm8 = px_i
-		movd xmm9, [rdi]		; xmm9 = g_i
-		
+		push r9
+		xor r9,r9
+		mov r9w,[rdi]
+		movd xmm9, r9d		; xmm9 = g_i
+		pop r9
 		movdqu xmm11, [mask_pixel_1_to_short] ; <-- mitad baja con pixels pasados a short
 		movdqu xmm12, [mask_copy_1] ; <-- mitad baja con 4 g_is
 
 		pshufb xmm8, xmm11	; xmm8 = [ 0 | 0 | 0 | 0 |alpha_i|blue_i|green_i|red_i]
 		pshufb xmm9, xmm12	; xmm9 = [ 0 | 0 | 0 | 0 | g_i | g_i | g_i | g_i ]
-		PMULLW xmm8, xmm9	; xmm8 = producto entre los de arriba
-		PADDW xmm10, xmm8
+		pmullw xmm8, xmm9	; xmm8 = producto entre los de arriba
+		paddw xmm10, xmm8
 
 		.sigo:
 		
@@ -638,7 +669,7 @@ blur_asm_v3:
 		xor r10, r10	; x_m = 0
 		mov eax, r11d
 		xor rdx, rdx
-		div r8d			; y_m/n ;ARREGLAR
+		div r8d			; y_m/n
 
 		cmp edx, 0
 
@@ -652,13 +683,13 @@ blur_asm_v3:
 
 		xor r11, r11		; y_m = 0
 
-		MOVDQU xmm7,xmm10
-		PSLLDQ xmm7,8
-		PADDW xmm10, xmm7
+		movdqu xmm7,xmm10
+		pslldq xmm7,8
+		paddw xmm10, xmm7
 
 		pxor xmm5,xmm5
 		vmovq xmm5,rcx
-		PSRLW xmm10,xmm5
+		psrlw xmm10,xmm5
 		pshufb xmm10, [mask_short_to_pixel_0] ;agarro los 4 words que estan en la parte alta y los paso a 4 byte en la parte baja
 
 		mov r12, r13		; cargo puntero a pos en imagen
@@ -712,5 +743,11 @@ blur_asm_v3:
 	call free
 
 	add rsp, 32
+	pop rbx
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbp
     ret
+
