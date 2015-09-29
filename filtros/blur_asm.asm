@@ -68,8 +68,8 @@ blur_asm_v1:
 
 	mov r12, rdi	; r12 = puntero a imagen original
 	mov r13, rsi	; r13 = puntero a imagen destino
-	mov r14d, edx	; r14d = filas
-	mov rbp, r8		; rbp = radio
+	mov r14d, ecx	; r14d = cols
+	mov rbp, r8	; rbp = radio
 
 	mov edi, ebp
 	call gauss_matrix
@@ -83,7 +83,7 @@ blur_asm_v1:
 	shl r8, 1		; r8d = 2*radio
 
 	mov eax, r14d
-	shl eax, 2		; eax = filas*4 ;me parece que esta mal eso, deberia ser cols*4
+	shl eax, 2		; eax = cols*4
 	xor rbx, rbx
 	mov rbx, rax	; rbx = ancho en bytes
 
