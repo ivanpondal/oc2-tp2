@@ -1,33 +1,38 @@
-\subsection{Estudio sobre la relación entre la representación numérica escogida y los tiempos de ejecución}
+\subsection{Precisión versus rendimiento}
 \label{subsec:resultados2}
 
 \subsubsection{Introducción}
 
 Al analizar nuestra implementación del blur gaussiano en busca de una posible
-mejora o variante que pueda resultar de interes surgio la idea de cambiar el
-sistema de representación numerica que se utilizaba, la versión base utiliza
-double lo cual asegura una buena precisión al hacer los cálculos, pero muchas
-veces esta precisión no es necesaria y se prefiere una performance mayor en
-terminos de tiempos de ejecución a partir de esto surge la idea de nuestro
-experimento.
+mejora o variante que pudiera resultar de interés, surgió la idea de cambiar el
+tipo de dato en el que se procesaba la imagen. La versión de control utiliza
+el tipo float lo cual asegura suficiente precisión al hacer los cálculos, pero a
+veces esta precisión no es necesaria y se prefiere un rendimiento mayor en
+términos de tiempos de ejecución. Es así como se nos ocurrió estudiar con más
+detalle este camino y sus consecuencias.
 
-\subsubsection{Hipotesis del Experimento}
+Para los siguientes experimentos, se utilizó la implementación explicada en la
+sección \ref{sec:blur_imp_exp}.
 
-A partir de las ideas mencionadas surge entonces un experimento para intentar
-corroborar esta intuición acerca de como al sacrificar precisión podemos quizas
-obtener un filtro de mayor velocidad. Creemos que si trabajamos con floats y
-necesitamos para ellos 32 bits, entonces, al pasar nuestra implementación a 16
-bits utilizando unsigned short podremos acercarnos a una disminución en el
-tiempo de ejecución de la mitad. Esta idea se fundamenta a partir de como
-gracias a las instrucciones que assembler posee para operar con multiples
-paquetes de datos (SIMD) podemos trabajar con el doble de paquetes si son de la
-mitad de tamaño que antes. Un punto importante con el que tuvimos que
-enfrentarnos fue como adaptar el algoritmo para hacer perder la menor cantidad
-de precisión posible. Para esto antes armamos una variante del kernel que en vez
-de trabajar con numeros entre 0 y 1 trabajaba con numeros entre 0 y 255, valores
-con los que unsigned short puede manejarse bien, una mejor explicación de la
-implementación de este algoritmo esta en la sección de Descripción del codigo en
-el informe.
+\subsubsection{Hipótesis}
+
+A partir de las ideas mencionadas surgen varios experimentos para intentar
+corroborar esta intuición acerca de cómo al sacrificar precisión podemos
+posiblemente obtener un filtro de mayor velocidad.
+
+Para empezar, tenemos que al pasar de punto flotante a enteros, dejamos de
+tener que realizar conversiones de tipo y realizamos todas operaciones sobre
+enteros, que en un principio deberían ser menos costosas que las de punto
+flotante. Para esto la primer implementación de prueba que se realizó, difiere
+con la de control únicamente en que en lugar de trabajar con floats, lo hace con
+enteros de 32 bits, por lo cual procesa la misma cantidad de pixeles en
+simultáneo, pero lo hace con instrucciones para enteros.
+
+Por otro lado, si en nuestra versión de control trabajando con floats de 32 bits
+operábamos de a un pixel a la vez, con nuestra implementación que utiliza
+unsigned short de 16 bits estaríamos procesando dos pixeles en
+simultáneo, llevándonos a suponer que esto nos brindaría una disminución en el
+tiempo de ejecución a la mitad.
 
 \subsubsection{Metodos utilizados}
 
