@@ -155,7 +155,7 @@ mismo para facilitar la explicación.
 			\begin{tabular}{|*{16}{C{18pt}|}}
 				\cline{13-16} \multicolumn{12}{c|}{} & A & R & G & B \\ \hline
 				- & - & - & - & - & - & - & - &- & - & - & - & 0 & 42 & 42 & 42 \\ \hline
-				byte 15 & \multicolumn{11}{|c|}{$\dots$} & byte 3 & byte 2 & byte 1 & byte 0 \\ \hline
+				byte 15 & \multicolumn{11}{c|}{$\dots$} & byte 3 & byte 2 & byte 1 & byte 0 \\ \hline
 				\multicolumn{16}{|c|}{128 bits} \\ \hline
 			\end{tabular}
 			\caption{XMM$_I$}
@@ -196,18 +196,60 @@ mismo para facilitar la explicación.
 				- & - & - & - & - & - & - & - &- & - & - & - & 0 & 42 & 42 & 42 \\ \hline
 				\multicolumn{16}{|c|}{128 bits} \\ \hline
 			\end{tabular}
-			\caption{XMM$_I$ antes de ejecutar \textbf{psshufb}}
+			\caption{XMM$_I$ antes de ejecutar \textbf{pshufb}}
 		\end{table}
 
 		\begin{table}[H]
 			\centering
 			\begin{tabular}{|*{16}{C{18pt}|}}
 				\hline
-				\multicolumn{4}{|c|}{A} & \multicolumn{4}{|c|}{R} & \multicolumn{4}{|c|}{G} & \multicolumn{4}{|c|}{B} \\ \hline
+				\multicolumn{4}{|c|}{A} & \multicolumn{4}{c|}{R} & \multicolumn{4}{c|}{G} & \multicolumn{4}{c|}{B} \\ \hline
 				0 & 0 & 0 & 0 & 0 & 0 & 0 & 42 & 0 & 0 & 0 & 42 & 0 & 0 & 0 & 42 \\ \hline
 				\multicolumn{16}{|c|}{128 bits} \\ \hline
 			\end{tabular}
-			\caption{XMM$_I$ después de ejecutar \textbf{psshufb}}
+			\caption{XMM$_I$ después de ejecutar \textbf{pshufb}}
+		\end{table}
+
+	\item Convierto los int de XMM$_I$ a float.
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{4}{C{64pt}|}}
+				\hline
+				A & R & G & B \\ \hline
+				42.0 & 42.0 & 42.0 & 42.0 \\ \hline
+				float 3 & float 2 & float 1 & float 0 \\ \hline
+				\multicolumn{4}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_I$ con 4 floats empaquetados}
+		\end{table}
+
+	\item Utilizo otra máscara con \textbf{pshufb} para copiar el coeficiente
+		$K_{0,0}$ al resto de los floats empaquetados de XMM$_K$. La máscara
+		utilizada fue:
+
+		\textit{DB 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{4}{C{64pt}|}}
+				\cline{4-4} \multicolumn{3}{c|}{} & $K_{0,0}$ \\ \hline
+				- & - & - & 0.42 \\ \hline
+				float 3 & float 2 & float 1 & float 0 \\ \hline
+				\multicolumn{4}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_K$ antes de ejecutar \textbf{pshufb}}
+		\end{table}
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{4}{C{64pt}|}}
+				\hline
+				\multicolumn{4}{|c|}{$K_{0,0}$} \\ \hline
+				0.42 & 0.42 & 0.42 & 0.42 \\ \hline
+				float 3 & float 2 & float 1 & float 0 \\ \hline
+				\multicolumn{4}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_K$ antes de ejecutar \textbf{pshufb}}
 		\end{table}
 
 \end{enumerate}
