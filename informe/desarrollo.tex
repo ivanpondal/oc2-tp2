@@ -1,3 +1,25 @@
+\subsection{Diferencia de imagenes}
+
+\subsubsection{Explicación del código en assembler}
+El código sigue el siguiente esquema:
+\begin{enumerate}
+	\item Cálculo del total de píxeles de la imagen.
+	\item Ciclo en el que procesamos de a cuatro píxeles por iteración:
+	\begin{enumerate}
+		\item Cargamos los píxeles y desempaquetamos las componentes de bytes a words, pues vamos a restar enteros de un byte sin signo (entre 0 y 255), lo que puede dar resultados entre -255 y 255.
+		\item Realizamos las restas y tomamos valor absoluto de los resultados.
+		\item Empaquetamos nuevamente a byte las componentes (que ahora son todas positivas).
+		\item Calculamos la componente máxima de cada vector (sin incluir la transparencia), que queda guardada en la componente \emph{r}.
+		\item Seteamos todas las componentes de cada vector con el valor de su norma infinito, salvo la transparencia que ponemos en 255 siempre. 
+		\item Avanzamos los punteros.
+	\end{enumerate}
+\end{enumerate}
+
+Pasamos a detallar un poco más cada punto.
+
+
+
+
 \subsection{Blur Gaussiano}
 
 \subsubsection{Descripción del filtro}

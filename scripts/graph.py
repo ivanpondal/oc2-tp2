@@ -52,8 +52,8 @@ def barplot_blur(f):
 	ax.set_ylabel('#ticks')
 	ax.set_title(u'Blur C vs Blur ASM')
 	ax.set_xticks(ind+width)
-	ax.set_xlabel(u'Tamaño de imagen')
-	ax.set_xticklabels( ('10') )
+	ax.set_xlabel(u'Ancho de imagen')
+	ax.set_xticklabels( img_sizes )
 
 	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=2 )
 
@@ -69,6 +69,7 @@ def barplot_blur(f):
 	plt.savefig('barplot.blur.c.vs.asm.pdf')
 
 def barplot_diff(f):
+
 	tests_c = []
 	tests_asm = []
 	img_sizes = []
@@ -101,7 +102,7 @@ def barplot_diff(f):
 	ax.set_ylabel('#ticks')
 	ax.set_title(u'Diff C vs Diff ASM')
 	ax.set_xticks(ind+width)
-	ax.set_xlabel(u'Tamaño de imagen')
+	ax.set_xlabel(u'Ancho de imagen')
 	ax.set_xticklabels( img_sizes )
 
 	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=2 )
@@ -173,7 +174,7 @@ def lineplot_diff(f):
 
 	ax.set_ylabel('#ticks/pixel')
 	ax.set_title(u'Diff C vs Diff ASM')
-	ax.set_xlabel(u'Tamaño de imagen')
+	ax.set_xlabel(u'Ancho de imagen')
 	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=1 )
 
 	plt.savefig('diff_lineplot.pdf')
@@ -233,8 +234,8 @@ def lineplot_blur(f):
 
 	ax.set_ylabel('#ticks/pixel')
 	ax.set_title(u'Blur C vs Blur ASM')
-	ax.set_xlabel(u'Tamaño de imagen')
-	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=1 )
+	ax.set_xlabel(u'Ancho de imagen')
+	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=2 )
 
 	plt.savefig('blur_lineplot.pdf')
 
@@ -266,6 +267,115 @@ def diff_histogram(f):
 
 	plt.savefig('diff_histogram.pdf')
 
+def lineplot_radio(f):
+	#TIEMPOS_EN_C.txt TIEMPOS_EN_ASM.txt RADIO
+	tests_c = []
+	tests_asm = []
+	radio_sizes = []
+
+	fobj = open(f, 'r')
+	for line in fobj:
+		words = line.split(' ')
+		tests_c.append(words[0])
+		tests_asm.append(words[1])
+		radio_sizes.append(words[2].rstrip('\n'))
+	fobj.close()
+
+	buffer_c = []
+	for file in tests_c:
+		times_list = fileTolist(file)
+		buffer_c.append(times_list)
+	
+	#Normalizo
+	for i in xrange(len(radio_sizes)):
+		buffer_c[i] = map((lambda x: x/256**2), buffer_c[i])
+
+	cMeans = []
+	cStd = []
+	for xs in buffer_c:
+		cMeans.append(trim_mean(xs, 0.25))
+		cStd.append(np.std(xs))
+
+	buffer_asm = []
+	for file in tests_asm:
+		times_list = fileTolist(file)
+		buffer_asm.append(times_list)
+	
+	#Normalizo
+	for i in xrange(len(radio_sizes)):
+		buffer_asm[i] = map((lambda x: x/256**2), buffer_asm[i])
+
+	asmMeans = []
+	asmStd = []
+	for xs in buffer_asm:
+		asmMeans.append(trim_mean(xs, 0.25))
+		asmStd.append(np.std(xs))
+
+
+	fig, ax = plt.subplots()
+
+	plt.plot(radio_sizes, cMeans, 'ro')
+	rects1 = ax.errorbar(radio_sizes, cMeans, yerr=cStd)
+
+	plt.plot(radio_sizes, asmMeans, 'ro')
+	rects2 = ax.errorbar(radio_sizes, asmMeans, yerr=asmStd)
+
+	ax.set_ylabel('#ticks/pixel')
+	ax.set_title(u'Blur C vs Blur ASM en función del tamaño del radio')
+	ax.set_xlabel(u'Radio')
+	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=2 )
+
+	plt.savefig('lineplot_radio.pdf')
+
+def barplot_radio(f):
+	tests_c = []
+	tests_asm = []
+	radio_sizes = []
+
+	fobj = open(f, 'r')
+	for line in fobj:
+		words = line.split(' ')
+		tests_c.append(fileTolist(words[0]))
+		tests_asm.append(fileTolist(words[1]))
+		radio_sizes.append(words[2].rstrip('\n'))
+	fobj.close()
+
+	cMeans = [trim_mean(x, 0.25) for x in tests_c]
+	cStd = [np.std(x) for x in tests_c]
+
+	asmMeans = [trim_mean(x, 0.25) for x in tests_asm]
+	asmStd = [np.std(x) for x in tests_asm]
+
+	N = len(radio_sizes)
+
+	ind = np.arange(N)  # the x locations for the groups
+	width = 0.35       # the width of the bars
+
+	fig, ax = plt.subplots()
+	rects1 = ax.bar(ind, cMeans, width, color='r', yerr=cStd)
+
+	rects2 = ax.bar(ind+width, asmMeans, width, color='y', yerr=asmStd)
+
+	# add some text for labels, title and axes ticks
+	ax.set_ylabel('#ticks')
+	ax.set_title(u'Blur C vs Blur ASM')
+	ax.set_xticks(ind+width)
+	ax.set_xlabel(u'Radio')
+	ax.set_xticklabels(radio_sizes)
+
+	ax.legend( (rects1[0], rects2[0]), ('C', 'ASM'), loc=2 )
+
+	def autolabel(rects):
+	 	# attach some text labels
+	 	for rect in rects:
+			height = rect.get_height()
+			ax.text(rect.get_x()+rect.get_width()/2., 1.05*height, '%.1f'%(round(height,2)),ha='center', va='bottom')
+
+	# autolabel(rects1)
+	# autolabel(rects2)
+
+	plt.savefig('barplot_radio.pdf')
+
 
 def fileTolist(f):
 	fobj = open(f, "r")
@@ -286,3 +396,7 @@ elif argv[1] == "lineplot_diff":
 	lineplot_diff(argv[2])
 elif argv[1] == "lineplot_blur":
 	lineplot_blur(argv[2])
+elif argv[1] == "lineplot_radio":
+	lineplot_radio(argv[2])
+elif argv[1] == "barplot_radio":
+	barplot_radio(argv[2])
