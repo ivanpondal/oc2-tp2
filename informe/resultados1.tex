@@ -27,13 +27,14 @@ Los experimentos realizados para corroborar o rechazar nuestras hipótesis fuero
 	\item Para el filtro \emph{blur}:
 		\begin{enumerate}
 			\item \label{itm:exp-blur1}Análogo al experimento \ref{itm:exp-diff}, con 7 tamaños de imagen, y usando $\sigma=3$ y $radio=9$. \footnote{La cantidad de iteraciones usadas para realizar los experimentos fue variable en el caso de blur, pues como la cantidad de operaciones que realiza es alta y crece muy rápido con el tamaño de la imagen, los \emph{outliers} disminuyen significativamente con el mismo, pues el tiempo de cómputo adicional generado por cambios de contexto del sistema se ve amortizado, así como el efecto generado por mayores o menores \emph{hit-rates}. Esta aclaración vale para todos los experimentos sobre \emph{blur} de ahora en más.}
-			\item Repetimos \ref{itm:exp-blur1} pero con $radio = 1$ y $\sigma = 0.3$ (el valor del $\sigma$ realmente es anecdótico pues en lo único que afecta es en el valor de los coeficientes del \emph{kernel}). El propósito de esto es comparar y explicar las diferencias con respecto al caso $radio = 9$.
-			\item Fijadas las dimensiones de una imagen en 256x256, aplicamos \emph{blur} variando el radio.
-			\item Igual a \ref{itm:exp-blur1} pero cambiando el algoritmo en C por una versión optimizada.
+			\item \label{itm:exp-blur2}Repetimos \ref{itm:exp-blur1} pero con $radio = 1$ y $\sigma = 0.3$ (el valor del $\sigma$ realmente es anecdótico pues en lo único que afecta es en el valor de los coeficientes del \emph{kernel}). El propósito de esto es comparar y explicar las diferencias con respecto al caso $radio = 9$.
+			\item \label{itm:exp-blur3}Fijadas las dimensiones de una imagen en 256x256, aplicamos \emph{blur} variando el radio.
+			\item \label{itm:exp-blur4}Igual a \ref{itm:exp-blur1} pero cambiando el algoritmo en C por una versión optimizada.
 		\end{enumerate}
 \end{enumerate}
 
 \subsubsection{Resultados y análisis}
+\paragraph*{Experimentos diff}
 Las figuras \ref{fig:exp-diff-bar1} y \ref{fig:exp-diff-bar2} presentan los resultados obtenidos del experimento \ref{itm:exp-diff}. Vemos que el crecimiento se condice con lo esperado, pues tanto las barras de la implementación en C como la de ASM muestran que crecen de manera similar, con la diferencia de que la constante en la versión en assembler es menor (entre tres y cuatro veces, de hecho, que es lo que suponíamos). Esto refleja el hecho de que al implementar el filtro en ASM no obtenemos una mejora en el orden de la complejidad aunque la mejoría en la constante resulta sensible.
 
 \begin{figure}[H]
@@ -53,14 +54,27 @@ Las figuras \ref{fig:exp-diff-bar1} y \ref{fig:exp-diff-bar2} presentan los resu
 \end{minipage}%
 \end{figure}
 
-Ahora bien, si en lugar de graficar (en el eje de ordenadas) la cantidad de ticks del clock, normalizamos, es decir graficamos la cantidad de ciclos de clock por píxel, podemos obtener un gráfico de puntos como el que se observa en la figura \ref{fig:exp-diff-line}. Notemos que este gráfico nos permite ver varias cosas que se perdían en los gráficos anteriores. En primer término, vemos que ambas curvas de puntos tienen similar pendiente, aunque razonablemente ASM sigue siendo entre tres y cuatro veces más rapido en esta categoría. Esto nuevamente parece ser consecuencia de que ambas implementaciones usen algoritmos similares. Además, vemos que las curvas tienen dos etapas: una inicial, para los anchos hasta 128 píxeles, que decrece, es decir, que el tiempo de cómputo insumido por cada píxel (en promedio) es decreciente; la segunda etapa muestra una convergencia hacia un valor del eje de ordenadas. Pensemos a que puede deberse cada cosa.
-
-Lo primero posiblemente sea consecuencia de lo rápido que se procesan imágenes de tamaño relativamente pequeño. Esta velocidad podría producir que los \emph{miss} tengan más peso, generando un menor \emph{hit-rate}, pues la cantidad de accesos a memoria que se hacen en total es relativamente chica para imágenes chicas. Los experimentos se corrieron en una PC con tamaño de línea de cache igual a 64 bytes (o lo que es lo mismo 30 o 32 píxeles, si la imagen está alineada o desalineada a 64 bytes respectivamente). A medida que crece el tamaño de la imagen, los \emph{miss} empiezan a verse amortizados por la gran cantidad de \emph{hits} que se logran gracias, especialmente, al principio de localidad espacial, que me asegura que cuando el controlador de memoria va a buscar un píxel a memoria principal, además me trae todos los píxeles que estén en la misma línea. Esto significa que por cada \emph{miss} me garantizo 30 o 32 hits. Eventualmente, 
-
-La convergencia que se muestra en la segunda etapa puede pensarse como el producto de que el \emph{diff} varía linealmente con respecto al tamaño de la imagen (esto es cuadráticamente respecto del ancho). Dicho de otra forma, si a una imagen de $n$ filas, se le agregan 4 píxeles más a cada una, esto implica que el \emph{diff\_c} va a tener que hacer 4 iteraciones más por cada una de las $m$ filas, mientras el \emph{diff\_asm} va a hacer sólo una más. Pero el tiempo de cómputo que agrega procesar cada uno de estos píxeles es el mismo que aportaba un píxel de la imagen vieja (pues asumimos que la imagen ya era lo bastante grande como para que el efecto de la cache o los cambios de contexto al agrandar más la imagen no sean significativos) por lo que al dividir el tiempo total por la nueva cantidad de píxeles obtenemos el mismo tiempo por pixel que antes (aproximadamente, claro esta).
+Ahora bien, si en lugar de graficar (en el eje de ordenadas) la cantidad de ticks del clock, normalizamos, es decir graficamos la cantidad de ciclos de clock por píxel, podemos obtener un gráfico de puntos como el que se observa en la figura \ref{fig:exp-diff-line}. Notemos que este gráfico nos permite ver varias cosas que se perdían en los gráficos anteriores. En primer término, vemos que ambas curvas de puntos tienen similar pendiente, aunque razonablemente ASM sigue siendo entre tres y cuatro veces más rapido en esta categoría. Esto nuevamente parece ser consecuencia de que ambas implementaciones usen algoritmos similares. 
 
 También es interesante notar que a medida que aumentamos el tamaño de la imagen, la varianza tiende a disminuir y converger al valor esperado. Esto es razonable, pues para una imagen pequeña que se procesa rápido, un cambio en el contexto del sistema representa un aumento en el tiempo de cómputo mucho más significativo que para una imagen grande que tarda bastante en procesarse, lo que amortiza en algún punto estas diferencias.
 
+Además, vemos que las curvas tienen dos etapas: una inicial, para los anchos hasta 128 píxeles, que decrece, es decir, que el tiempo de cómputo insumido por cada píxel (en promedio) es decreciente; la segunda etapa muestra una convergencia hacia un valor del eje de ordenadas. Pensemos a que puede deberse cada cosa.
+
+Lo primero posiblemente sea consecuencia de lo rápido que se procesan imágenes de tamaño relativamente pequeño. Esta velocidad podría producir que los \emph{miss} tengan más peso, generando un menor \emph{hit-rate}, pues la cantidad de accesos a memoria que se hacen en total es relativamente chica para imágenes chicas. Así mismo, los cambios de contexto que se pudieran dar, pueden tomar un tiempo significativo en relación al tiempo que toma ejecutar cada iteración del filtro.
+
+La convergencia que se muestra en la segunda etapa puede pensarse como el producto de que el \emph{diff} varía linealmente con respecto al tamaño de la imagen (esto es cuadráticamente respecto del ancho). Dicho de otra forma, si a una imagen de $m\times n$, se le agregan 4 píxeles (por poner un ejemplo) más a cada una de las $m$ filas, esto implica que el \emph{diff\_c} va a tener que hacer 4 iteraciones más por cada una de ellas, mientras el \emph{diff\_asm} va a hacer sólo una más. Pero el tiempo de cómputo que agrega procesar cada uno de estos píxeles es el mismo que aportaba un píxel de la imagen vieja (llamémoslo $t_{pixelViejo}$), pues asumimos que la imagen ya era lo bastante grande como para que el efecto de la cache o los cambios de contexto al agrandar más la imagen no sean significativos, por lo que al dividir el tiempo total por la nueva cantidad de píxeles obtenemos el mismo tiempo por pixel que antes (aproximadamente, claro esta). Es decir, que 
+\begin{equation}
+\label{eq:convergencia1}
+	\begin{split}
+	t_{pixelNuevo} & = \frac{ t_{totalViejo} + m \times 4 \times t_{pixelViejo}}{m\times (n+4)} \\
+				   & = \frac{ (m\times n) \times t_{pixelViejo} + m \times 4 \times t_{pixelViejo}}{m\times (n+4)} \\
+				   & = \frac{ (m\times n + m \times 4) \times t_{pixelViejo}}{m\times (n+4)} \\
+				   & = \frac{ m\times (n + 4) \times t_{pixelViejo}}{m\times (n+4)} \\
+				   & = t_{pixelViejo} 
+	\end{split}
+\end{equation}
+
+Claramente, en la ecuación (\ref{eq:convergencia1}) podemos cambiar 4 por cualquier múltiplo y sigue funcionando.
 \begin{figure}
  	\centering
  	\includegraphics[width=0.75\textwidth]{../graficos/diff_gcc.pdf}
@@ -68,12 +82,8 @@ También es interesante notar que a medida que aumentamos el tamaño de la image
 	\label{fig:exp-diff-line}
 \end{figure}
 
-
+\paragraph*{Experimentos blur}
 Pasemos ahora a analizar los resultados correspondientes a blur.
-
-La figura nos muestra \ref{fig:exp-blur1} nos muestra los resultados obtenidos del experimento \ref{itm:exp-blur1}. En este caso consideramos directamente la versión normalizada, pues nos muestra claramente toda la información que necesitamos. Nuevamente, vemos que el tiempo de cómputo de las versiones en C y ASM varían con una curva de similar pendiente, pero la versión aprovecha el procesamiento SIMD sigue ganando gracias a la mejora en las constantes. No obstante podemos apreciar que en este caso la mejoría fue menor a la esperada: mientras que suponíamos una disminución de entre 2 y 3 veces en el tiempo de procesamiento, en la práctica sólo fue de entre 1.5 a 2 veces. Esto puede pensarse que es debido al alto grado de optimización que implica compilar el código en C con O3.
-
-
 
 \begin{figure}[H]
  	\centering
@@ -82,7 +92,11 @@ La figura nos muestra \ref{fig:exp-blur1} nos muestra los resultados obtenidos d
 	\label{fig:exp-blur1}
 \end{figure}
 
-%TODO: Hacer más experimentos para disminuir la varianza
+La figura \ref{fig:exp-blur1} nos muestra los resultados obtenidos del experimento \ref{itm:exp-blur1}. En este caso consideramos directamente la versión normalizada, pues nos muestra claramente toda la información que necesitamos. Nuevamente, vemos que el tiempo de cómputo de las versiones en C y ASM varían con una curva de similar pendiente, pero la versión aprovecha el procesamiento SIMD sigue ganando gracias a la mejora en las constantes. No obstante podemos apreciar que en este caso la mejoría fue menor a la esperada: mientras que suponíamos una disminución de entre 2 y 3 veces en el tiempo de procesamiento, en la práctica sólo fue de entre 1.5 a 2 veces. Esto puede pensarse que es debido al alto grado de optimización que implica compilar el código en C con O3.
+
+En este caso, como los tiempos de procesamiento de blur son mucho más altos que \emph{diff}, no apreciamos una primera etapa de decrecimiento en la curva, pues no se dan las condiciones explicadas antes. Lo que si es notable es que la curva lejos de ser constante como en \emph{diff} presenta un crecimiento logarítmico. Tratemos de ver porque pasa esto haciendo un análisis similar al hecho para el filtro de diferencias. En ese caso teníamos que el crecimiento era lineal en el tamaño de la imagen pues \emph{diff} sólo tabaja con un pixel en cada iteración de la versión C \footnote{Usamos esta que es más simple de explicar, pero todo es análogo a ASM.}. Sin embargo con el blur entra en consideración el radio, que es 9 en el caso del experimento. Por lo tanto, si tenemos una imagen y le agregamos más píxeles, por cada uno de ellos se nos suma una iteración adicional, pero dentro de la misma tenemos que operar con los 360 vecinos ($(2\times radio + 1)^2= 361$ incluyendo al píxel sobre el que estamos parados) del pixel que queremos procesar, más . Luego, por cada píxel que le agreguemos a la imagen estaremos agregando también 360 accesos a memoria para obtener los vecinos, y otros 361 para obtener los coeficientes del \emph{kernel}. Visto esto, es claro que el aumento en los píxeles no compensa el aumento en las operaciones (como si pasaba con $diff$) por lo que la cantidad de ciclos de clock por píxel va a aumentar indefectiblemente. No obstante, como el aumento de las operaciones por píxel es constante ocurre que cada aumento impacta cada vez menos en el tiempo total de procesado, por lo que pasado cierto punto, la curva tiende a variar cada vez menos y converger hacia un valor del eje de ordenadas, lo que genera que tenga una forma logarítmica.
+
+
 \begin{figure}[H]
  	\centering
  	\includegraphics[width=0.75\textwidth]{../graficos/blur_v2_lineplot_03-1.pdf}
@@ -90,7 +104,23 @@ La figura nos muestra \ref{fig:exp-blur1} nos muestra los resultados obtenidos d
 	\label{fig:exp-blur2}
 \end{figure}
 
+Si ahora analizamos la figura \ref{fig:exp-blur2} correspondiente al experimento \ref{itm:exp-blur2}, vemos que nuevamente obtenemos curvas logarítmicas, pero con una diferencia importante: las pendientes de las curvas son mucho más suaves. Esto efectivamente se debe a que redujimos el valor del radio de 9 a 1, por lo que que la cantidad de accesos a memoria que se realizan por píxel es de 8 para los vecinos, y 9 para los elementos del \emph{kernel}. Esto lógicamente genera que la velocidad de cambio de la curva sea menor.
 
+\begin{figure}[H]
+ 	\centering
+ 	\includegraphics[width=0.75\textwidth]{../graficos/barplot_radio.pdf}
+	\caption{\footnotesize Gráfico que muestra la cantidad de ticks de reloj en función del radio, para una imagen de 256x256}
+	\label{fig:exp-blur3}
+\end{figure}
+
+La figura \ref{fig:exp-blur3} muestra que al variar sólo el radio, C y ASM varían sus performances de forma similar.
+
+\begin{figure}[H]
+ 	\centering
+ 	\includegraphics[width=0.75\textwidth]{../graficos/blur_v1_lineplot.pdf}
+	\caption{\footnotesize Gráfico que muestra la cantidad de ticks de reloj por pixel que se requieren para aplicar el filtro de blur gaussiano implementado en C y en assembler en función del ancho de la imagen, para $\sigma = 3$, $radio = 9$ Todas las imágenes son cuadradas y fueron generadas pseudo-aleatoriamente. Los puntos rojos representan la media 0.25-podada calculada sobre las muestras obtenidas, mientras que los segmentos verticales indican la desviación standard.}
+	\label{fig:exp-blur4}
+\end{figure}
 
 %Posibles experimentos:
 % *Para blur: fijar el sigma, y hacer un lineplot en función del radio
