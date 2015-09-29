@@ -34,89 +34,110 @@ unsigned short de 16 bits estaríamos procesando dos pixeles en
 simultáneo, llevándonos a suponer que esto nos brindaría una disminución en el
 tiempo de ejecución a la mitad.
 
-\subsubsection{Metodos utilizados}
+En ambos casos, además de observar los tiempos de ejecución, al bajar la
+precisión suponemos que el cambio en la imagen resultante será proporcional a
+cuanta precisión decidamos sacrificar.
 
-Para corroborar nuestra hipotesis generamos un conjunto de imagenes cuadradas
-con pixels de colores seleccionados de forma aleatoria, para hacer esto creamos
-el archivo llamado random\_images\_generayor.py el cual tiene instrucciones de
-uso detalladas en sus comentarios, de todas maneras el funcionamiento de nuestro
-blur gaussiano no depende del color de los pixels por lo que se podria haber
-utilizado cualquier conjunto de imagenes no necesariamente aleatorias. A partir
-de esto creamos imagenes de 5 tamaños distintos, que iban de 25x25 hasta
-400x400. Luego repitiendo los experimentos de forma suficiente como para
-disminuir la varianza al máximo. Una vez obtenidos estos resultados analizamos
-que tanto bajo la calidad de la imagen para esto nos guiamos primero de la mera
-observación y complementandolo con el análisis que bmpdiff nos brinda.
+\subsubsection{Experimentos}
 
-Para los experimentos utilizamos tres implementaciones distintas de blur hechas
-en assembler estas son explicadas con detalle en la sección de descripción del
-codigo.
+Para corroborar nuestra hipótesis generamos un conjunto de imágenes cuadradas
+con pixels de colores seleccionados de forma pseudo-aleatoria, para esto
+realizamos el script \textit{random\_images\_generayor.py} que además tiene una semilla
+la cual nos permite repetir el experimento con los mismos resultados. Este
+conjunto de imágenes nos es útil en particular para analizar las diferencias
+entre las imágenes resultantes de la implementación de control y la
+experimental.
 
-\subsubsection{Verificación: Experimento 1}
+A partir de esto creamos imágenes de 5 tamaños distintos, que van de 25x25
+hasta 400x400. Luego aplicamos a cada imagen el filtro la cantidad de veces
+suficiente como para disminuir la varianza a un rango razonable. Una vez obtenidos estos
+resultados analizamos qué tanto bajó la calidad de la imagen, para lo cual nos
+guiamos primero por la mera observación y luego con un análisis en base a las
+métricas que nos brinda el ejecutable \textit{bmpdiff}.
 
+Para comparar los resultados de los experimentos utilizamos las implementaciones
+en ASM explicadas en la sección \ref{sec:blur_imp}. Nos referiremos a las mismas
+de la siguiente forma:
 
-\begin{figure}[H]
-\centering
-    \includegraphics[scale=0.5]{imgs/blur_ushort.jpg}
-  \caption{\footnotesize{Grafico donde se observan los tiempo de ejecución de las dos implementaciones estudiadas funcionando con distintos tamaños de imagenes.}}
-  \label{fig:tiempo2}
-\end{figure}
+\begin{itemize}
+	\item \textbf{blur\_control}
+		Versión de control, implementación de punto flotante. Procesa un pixel a
+		la vez.
+	\item \textbf{blur\_uint}
+		Primer versión experimental, trabajando con enteros sin signo de 32 bit en lugar
+		de números de punto flotante. Procesa un pixel a la vez.
+	\item \textbf{blur\_ushort}
+		Segunda versión experimental operando con enteros sin signo de 16 bit
+		que le permiten procesar de a dos pixeles a la vez.
+\end{itemize}
 
-\begin{figure}[H]
-\centering
-\begin{minipage}{0.48\textwidth}
-  \centering
-    \includegraphics[width=1\textwidth]{imgs/chip_hd_v1.jpg}
-  \caption{\footnotesize{Imagen filtrada con blur\_asm\_v1 ($\sigma$ = 3 $r$ = 9), no presenta problemas para mantener el brillo de la imagen.}}
-  \label{fig:tiempo1}
-\end{minipage}%
-\hspace{0.03\textwidth}
-\begin{minipage}{0.48\textwidth}
-  \centering
-    \includegraphics[width=1\textwidth]{imgs/chip_hd_ushort.jpg}
-  \caption{\footnotesize{Imagen filtrada con blur\_asm\_ushort ($\sigma$ = 3 $r$ = 9), la versión que utiliza unsigned short, se nota el oscurecimiento ocasionado probablemente por la perdida de precisión en los cálculos.}}
-  \label{fig:tiempo2}
-\end{minipage}
-\end{figure}
+\subsubsection{Resultados y análisis}
 
-
-\subsubsection{Verificación: Experimento 2}
-
-Si bien el resultado anterior fue muy prometedor, ya que este mostraba
-resultados bastante concluyentes sobre como el tiempo de ejecución habia casi
-disminuido a la mitad, de todas maneras notamos que la utilización de unsigned
-int en la nueva implementación habia tenido ciertos cambios ajenos al tamaño de
-la estructura del dato que podian llegar a contribuir en la velocidad de
-computo. La principal sospecha surgió de las instrucciones de conversión de
-punto flotante a int (y de int a punto flotante), estas aparecen en
-blur\_asm\_v1 pero dejan de ser necesarias en blur\_asm\_ushort.
-
-Para verificar que la influencia de estas instrucciones no era tan grande
-implementamos blur\_asm\_uint, esta variante de blur, utiliza unsigned int por
-lo que siempre nos mantenemos en representaciones de punto fijo evitando
-conversiones. La gran diferencia con la implementación que utiliza shorts es que
-el tamaño requerido para hacer los cálculos no va a ser distinto del necesario
-en la implementacion base, blur\_asm\_v1.
-
-Los resultados fueron sorpresivos, la influencia de las instrucciones de
-conversion parecio casi nula en la velocidad de computa de los programas. Esto
-se puede observar en los siguientes gráficos.
+A continuación se muestran los gráficos de rendimiento en términos de tiempo de
+ejecución sobre las implementaciones mencionadas.
 
 \begin{figure}[H]
-\centering
-    \includegraphics[scale=0.5]{imgs/blur_uint.jpg}
-  \caption{\footnotesize{Grafico donde se observan los tiempos de ejecución de las dos implementaciones estudiadas funcionando con distintos tamaños de imagenes.}}
-  \label{fig:tiempo1}
+	\centering
+	\begin{minipage}{.5\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../graficos/blur_uint.pdf}
+		\caption{\textbf{blur\_control} vs \textbf{blur\_uint}}
+		\label{fig:blur_uint}
+	\end{minipage}\hfill
+	\begin{minipage}{.5\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../graficos/blur_ushort.pdf}
+		\caption{\textbf{blur\_control} vs \textbf{blur\_ushort}}
+		\label{fig:blur_ushort}
+	\end{minipage}
 \end{figure}
 
-Otro detalle relevante es que observamos como en este caso no se perdia brillo
-como pasaba con la implementación de blur UInt, se nota como la mayor cantidad
-de bits permiten una precisión suficiente para no redondear tanto los numeros
-para abajo y evitando acercarnos a valores cercanos a 0 en la paleta de colores.
+Comencemos con la Figura \ref{fig:blur_uint}. Asumimos que al trabajar con enteros, al
+evitar conversiones de tipo y operaciones de punto flotante se vería algún tipo
+de mejora en tiempo de ejecución. Sin embargo, nos encontramos con que no se
+çpresentó ningún tipo de mejora apreciable respecto la implementación de control,
+por lo tanto una posible conclusión sería que las operaciones de conversión de
+tipo y de punto flotante no agregan un costo apreciable.
+
+Ahora si observamos la Figura \ref{fig:blur_ushort} tenemos un análisis mucho
+más acertado. Aquí tenemos que la implementación \textbf{blur\_ushort} llega a
+procesar al menos un tercio más rápido que \textbf{blur\_control}, corroborando
+nuestra hipótesis que planteaba que el rendimiento aumentaría en cierta manera
+proporcional a cuántos pixeles uno era capaz de procesar en simultáneo.
+
+A continuación tenemos el resultado visual de estas tres versiones, donde
+podemos analizar qué tanto influye en nuestra imagen final el sacrificio de
+precisión.
 
 \begin{figure}[H]
-\centering
-    \includegraphics[scale=0.5]{imgs/chip_hd_uint.jpg}
-  \caption{\footnotesize{Imagen filtrada con el blur\_asm\_uint, valores utilizados $\sigma$ = 3 $r$ = 9}}
-  \label{fig:tiempo1}
+	\centering
+	\begin{minipage}{.3\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{imgs/chip_hd_v1.jpg}
+		\caption{\textbf{blur\_control}}
+		\label{fig:blur_prec_control}
+	\end{minipage}\hfill
+	\begin{minipage}{.3\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{imgs/chip_hd_v1.jpg}
+		\caption{\textbf{blur\_uint}}
+		\label{fig:blur_prec_uint}
+	\end{minipage}\hfill
+	\begin{minipage}{.3\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{imgs/chip_hd_ushort.jpg}
+		\caption{\textbf{blur\_ushort}}
+		\label{fig:blur_prec_ushort}
+	\end{minipage}
+	\caption*{Las tres figuras fueron producidas con $\sigma = 3$ y $r = 9$}
 \end{figure}
+
+Aquí tenemos otro punto de control, y se puede observar que hay una fuerte
+relación entre la precisión que se maneja y nuestro resultado final. Para
+\textbf{blur\_uint} la diferencia con respecto a \textbf{blur\_control} es
+imperceptible al ojo humano, ya que esta versión trabaja con más precisión que
+\textbf{blur\_ushort}. Por el otro lado, \textbf{blur\_ushort} para estos
+parámetros terminó oscureciendo la imagen, lo que nos hace suponer que al
+reducir tanto la precisión, lo más probable es que un número pequeño lo hubiera
+redondeado a 0, resultando en que la matriz de convolución se aleje más a
+integrar a 1 como observamos en la sección \ref{sec:blur_desc}.

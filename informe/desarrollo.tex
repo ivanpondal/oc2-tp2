@@ -21,8 +21,10 @@ Pasamos a detallar un poco más cada punto.
 
 
 \subsection{Blur Gaussiano}
+\label{sec:blur_imp}
 
 \subsubsection{Descripción del filtro}
+\label{sec:blur_desc}
 
 El filtro \textit{Blur Gaussiano}, produce un desenfoque en la imagen original
 en base a un coeficiente $\sigma$ y \textit{r} entero. Estas variables son
@@ -41,8 +43,6 @@ sus valores, pero al discretizar, la suma no llega a 1, se está recortando gran
 parte de la imagen de la función. Una posible solución es aumentar el radio,
 obteniendo así más valores de la función y permitiendo que la suma vaya
 aproximándose a 1 (Figura \ref{fig:blur_s3_r6}).
-
-% TODO: generar las imágenes posta, esto es fruta
 
 \begin{figure}[H]
 	\centering
