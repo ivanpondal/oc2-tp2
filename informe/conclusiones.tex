@@ -1,0 +1,28 @@
+Este trabajo nos permitió ver en casos reales las ventajas del procesamiento de
+datos en simultáneo. A su vez pudimos comparar qué tanto mejora el realizar una
+implementación en ASM contra una en C, logrando así tener una mejor idea de
+cuándo realmente conviene decidirse por uno o por el otro.
+
+Por un lado vimos que en lo que era \textit{Diferencia de Imágenes}, la
+implementación en ASM superó en forma desmedida la de C incluso con
+optimzaciones del compilador. Sin embargo con \textit{Blur Gaussiano} esta
+diferencia no fue tan abismal para la implementación de control, e incluso con
+la versión en C mejorada para utilizar mejor la matriz de convolución pudimos
+observar cómo nuestra versión en ASM se quedaba atrás. Esto refleja cómo algunas
+implementaciones en C el compilador es capaz de optimizar mejor que otras,
+llevándonos a repensar cómo mejorar nuestros programas.
+
+En lo que respecta la precisión contra el rendimiento en el algoritmo de
+\textit{Blur Gaussiano}, los resultados fueron en parte alentadores, porque
+vimos cómo se reducía el tiempo de cómputo, pero a su vez nos mostró que a veces
+la precisión es un factor que afecta considerablemente el resultado, como lo fue
+en nuestro caso.
+
+Por último, quedan muchos experimentos más que se podrían haber realizado así
+como profundizado. En particula, con la cuestión de precisión contra
+rendimiento, se podrían haber realizado un mayor número de pruebas, variando los
+parámetros de entrada para así poder observar con mayor detenimiento si era en
+todos los casos que la imagen resultante se veía afectada, o sólo en cierto
+rango. A su vez, se podría mejorar el código para que en lugar de trabajar con
+unsigned shorts, lo hiciera con unsigned bytes, nuevamente duplicando la
+cantidad de pixeles a procesar en simultáneo.
