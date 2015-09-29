@@ -126,7 +126,7 @@ mismo para facilitar la explicación.
 		registro XMM que llamaremos XMM$_A$ con 4 floats empaquetados.
 		\begin{table}[H]
 			\centering
-			\begin{tabular}{|*{4}{C{30pt}|}}
+			\begin{tabular}{|*{4}{C{64pt}|}}
 				\hline
 				A & R & G & B \\ \hline
 				0 & 0 & 0 & 0 \\ \hline
@@ -140,7 +140,7 @@ mismo para facilitar la explicación.
 		los pixeles en memoria estarán al revés (BGRA en lugar de ARGB).
 		\begin{table}[H]
 			\centering
-			\begin{tabular}{|*{4}{C{30pt}|}}
+			\begin{tabular}{|*{4}{C{64pt}|}}
 				\hline
 				$I_{2*r,0}$ & $I_{2*r,1}$ & $I_{2*r,2}$ & $I_{2*r,3}$ \\ \hline
 				B & G & R & A \\ \hline
@@ -216,7 +216,7 @@ mismo para facilitar la explicación.
 			\begin{tabular}{|*{4}{C{64pt}|}}
 				\hline
 				A & R & G & B \\ \hline
-				42.0 & 42.0 & 42.0 & 42.0 \\ \hline
+				0.0 & 42.0 & 42.0 & 42.0 \\ \hline
 				float 3 & float 2 & float 1 & float 0 \\ \hline
 				\multicolumn{4}{|c|}{128 bits} \\ \hline
 			\end{tabular}
@@ -251,6 +251,78 @@ mismo para facilitar la explicación.
 			\end{tabular}
 			\caption{XMM$_K$ después de ejecutar \textbf{pshufb}}
 		\end{table}
+
+	\item Por último, multiplicamos XMM$_I$ por XMM$_K$ y el resultado lo
+		sumamos a XMM$_A$.
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{4}{C{64pt}|}}
+				\hline
+				A & R & G & B \\ \hline
+				0 & 17.6 & 17.6 & 17.6 \\ \hline
+				float 3 & float 2 & float 1 & float 0 \\ \hline
+				\multicolumn{4}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_A$ = XMM$_A$ + XMM$_I$*XMM$_K$}
+		\end{table}
+
+	\item Repetimos del punto 1 al 7, moviendo los punteros de la matriz de
+		convolución y la imagen de derecha a izquierda, de arriba abajo
+		hasta haber calculado el promedio ponderado que estará almacenado
+		en XMM$_A$.
+
+	\item Convertimos los floats empaquetados en XMM$_A$ a ints y después
+		aplicando la siguiente máscara con \textbf{pshufb} los pasamos nuevamente a bytes:
+
+		\textit{DB 0, 4, 8, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128}
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{4}{C{64pt}|}}
+				\hline
+				A & R & G & B \\ \hline
+				0 & 42 & 42 & 42 \\ \hline
+				int 3 & int 2 & int 1 & int 0 \\ \hline
+				\multicolumn{4}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_A$ luego de haber sido convertido a int}
+		\end{table}
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{16}{C{18pt}|}}
+				\cline{13-16} \multicolumn{12}{c|}{} & A & R & G & B \\ \hline
+				0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 42 & 42 & 42 \\ \hline
+				byte 15 & \multicolumn{11}{c|}{$\dots$} & byte 3 & byte 2 & byte 1 & byte 0 \\ \hline
+				\multicolumn{16}{|c|}{128 bits} \\ \hline
+			\end{tabular}
+			\caption{XMM$_A$ después de ejecutar \textbf{pshufb}}
+		\end{table}
+
+	\item Utilizamos \textbf{movd} para guardar en $D_{r,4*r}$ el promedio
+		ponderado de sus vecinos, XMM$_A$. Nuevamente, se puede apreciar como al
+		mover el registro a memoria su contenido queda al revés, conforme al
+		formato especificado.
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|*{4}{C{64pt}|}}
+				\hline
+				$D_{r,4*r}$ & $D_{r,4*r+1}$ & $D_{r,4*r+2}$ & $D_{r,4*r+3}$ \\ \hline
+				B & G & R & A \\ \hline
+				42 & 42 & 42 & 0 \\ \hline
+				\multicolumn{4}{|c|}{32 bits} \\ \hline
+			\end{tabular}
+			\caption{Pixel $D_{r,4*r}$}
+		\end{table}
+
+	\item Así finaliza el cálculo de aplicar la matriz de convolución a un
+		pixel. A continuación se moverá el puntero de la imagen un pixel a la
+		derecha para repetir los pasos de 1 a 10, y así hasta llegar al final de
+		la fila de la imagen y continuar con la fila arriba suyo, siempre de
+		izquierda a derecha, de abajo arriba, hasta haber procesado toda la
+		imagen.
 
 \end{enumerate}
 
