@@ -13,12 +13,12 @@ función.
 
 Esto tiene una consecuencia directa sobre el resultado del filtro, y es que si
 tomamos un $\sigma$ grande, implicando mayor dispersión, y utilizamos un
-\textit{r} pequeño, veremos que la imagen producida se verá oscurecida (Figura \ref{fig:blur_s1_r1}), esto
+\textit{r} pequeño, veremos que la imagen producida se verá oscurecida (Figura \ref{fig:blur_s3_r3}), esto
 se debe a que nuestra función de densidad integra a 1 cuando se recorren todos
 sus valores, pero al discretizar, la suma no llega a 1, se está recortando gran
 parte de la imagen de la función. Una posible solución es aumentar el radio,
 obteniendo así más valores de la función y permitiendo que la suma vaya
-aproximándose a 1 (Figura \ref{fig:blur_s1_r5}).
+aproximándose a 1 (Figura \ref{fig:blur_s3_r6}).
 
 % TODO: generar las imágenes posta, esto es fruta
 
@@ -32,15 +32,15 @@ aproximándose a 1 (Figura \ref{fig:blur_s1_r5}).
 	\end{minipage}\hfill
 	\begin{minipage}{.3\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{blur_s1_r1.jpg}
-		\caption{Blur  $\sigma = 1, r = 1$}
-		\label{fig:blur_s1_r1}
+		\includegraphics[width=\linewidth]{blur_s3_r3.jpg}
+		\caption{Blur  $\sigma = 3, r = 3$}
+		\label{fig:blur_s3_r3}
 	\end{minipage}\hfill
 	\begin{minipage}{.3\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{blur_s1_r5.jpg}
-		\caption{Blur $\sigma = 1, r = 5$}
-		\label{fig:blur_s1_r5}
+		\includegraphics[width=\linewidth]{blur_s3_r6.jpg}
+		\caption{Blur $\sigma = 3, r = 6$}
+		\label{fig:blur_s3_r6}
 	\end{minipage}
 \end{figure}
 
@@ -249,7 +249,7 @@ mismo para facilitar la explicación.
 				float 3 & float 2 & float 1 & float 0 \\ \hline
 				\multicolumn{4}{|c|}{128 bits} \\ \hline
 			\end{tabular}
-			\caption{XMM$_K$ antes de ejecutar \textbf{pshufb}}
+			\caption{XMM$_K$ después de ejecutar \textbf{pshufb}}
 		\end{table}
 
 \end{enumerate}
