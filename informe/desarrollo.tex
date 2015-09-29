@@ -350,16 +350,17 @@ mismo para facilitar la explicación.
 
 
 
+
 \subsubsection{Implementación experimental 1}
 \label{sec:blur_imp_exp}
 
-Este programa surgió a partir de un interes en mejorar los tiempo de la implementación base. Como se explico anteriormente la implementación base trabaja con floats a la hora de trabajar entre los pixels y los valores del kernel, esto puede alterarse con el objetivo de manejar representaciones numericas los mas chicas posibles y asi, gracias a las instruciones SIMD, realizar operaciones sobre una mayor cantidad de datos simultaneamente, en esta explicación veremos un resumen del funconamiento de blur\_asm\_ushort y explicaremos porque unsigned short sera el tipo mas pequeño que podamos utilizar.
+Este programa surgió a partir de un interes en mejorar los tiempos de la implementación base. Como se explicó anteriormente la implementación base trabaja con floats a la hora de operar entre los pixels y los valores del kernel, esto puede alterarse con el objetivo de manejar representaciones numéricas los mas chicas posibles y así, gracias a las instruciones SIMD, realizar operaciones sobre una mayor cantidad de datos simultaneamente, en esta explicación veremos un resumen del funconamiento de blur\_asm\_ushort y explicaremos porque unsigned short sera el tipo mas pequeño que podamos utilizar.
 
 El código comparte grandes similitudes con el anterior por lo que solo resaltare las diferencias. 
 
 \paragraph{Creación de la Matriz de Convolución}
 
-A diferencia del blur base, aquí se utiliza una matriz formada por la función kernel\_impreciso\_ushort, esta como primer paso calcula el kernel con la mayor precisión posible, utilizando double. En el paso siguiente nos ponemos a calcular que tanto podemos agrandar estos numeros sin irnos del rango del tipo con el que queremos representar estos números. Si analizamos el filtro blur veremos que por cada pixel $p_{ij}$ recorreremos una vecindad de pixels rectangular regida por el tamaño del radio $r$ y a cada uno de esos pixels los multiplicaremos por su correspondiente elemento de la matriz de convolución $k_{ij}$. Quedaria lo siguiente.
+A diferencia del blur base, aquí se utiliza una matriz formada por la función kernel\_impreciso\_ushort, esta como primer paso calcula el kernel con la mayor precisión posible, utilizando double. En el paso siguiente nos ponemos a calcular que tanto podemos agrandar estos números sin irnos del rango del tipo con el que queremos representar estos números. Si analizamos el filtro blur veremos que por cada pixel $p_{ij}$ recorreremos una vecindad de pixels rectangular regida por el tamaño del radio $r$ y a cada uno de esos pixels los multiplicaremos por su correspondiente elemento de la matriz de convolución $k_{ij}$. Quedaria lo siguiente.
 
 $$ p_{i,i} = p_{r+i,r+i}.k_{r,r} + p_{r+i,r+i-1}.k_{r,r-1} + .. + p_{-r+i,-r+i+1}.k_{-r,-r+1} + p_{-r+i,-r+i}.k_{-r,-r} $$
 
@@ -369,15 +370,15 @@ $$ p_{r+i,r+i}.k_{r,r} + p_{-r+i,-r+i}.k_{-r,-r} \leq 255.k_{r,r} + 255.k_{r,r-1
 
 $$ 255.k_{r,r} + 255.k_{r,r-1} + .. + 255.k_{-r,-r+1} + 255.k_{-r,-r} \leq 255.(k_{r,r} + k_{r,r-1} + .. + k_{-r,-r+1} + k_{-r,-r}) $$
 
-Nos queda la sumatoria de todos los elementos del kernel que por ser una discretización de una distribución probabilistica sabemos que suma 1 o menos.
+Nos queda la sumatoria de todos los elementos del kernel que por ser una discretización de una distribución probabilística sabemos que suma 1 o menos.
 
 $$ p_{r+i,r+i}.k_{r,r} + p_{r+i,r+i-1}.k_{r,r-1} + .. +  p_{-r+i,-r+i+1}.k_{-r,-r+1} + p_{-r+i,-r+i}.k_{-r,-r} \leq 255 $$
 
-Si el kernel en vez de sumar 1 sumara, por ejemplo, 100 entonces podriamos asegurar que ningun término en ningun momento excederan el 25500, ya que tanto los pixels como los elementos de la matriz de convolución son positivos siempre. Si llamamos a este nuevo kernel que suma 1 $k100$ queda lo siguiente.
+Si el kernel en vez de sumar 1 sumara, por ejemplo, 100 entonces podriamos asegurar que ningun término en ningún momento excederan el 25500, ya que tanto los pixels como los elementos de la matriz de convolución son positivos siempre. Si llamamos a este nuevo kernel que suma 1 $k100$ queda lo siguiente.
 
 $$ p_{r+i,r+i}.k100_{r,r} + p_{r+i,r+i-1}.k100_{r,r-1} + .. +  p_{-r+i,-r+i+1}.k100_{-r+i,-r+1} + p_{-r+i,-r+i}.k100_{-r+i,-r+i} \leq 25500 $$
 
-Todos estos razonamientos son los que no llevaron a escoger unsigned int como tipo de representación numerica ya que como cuenta con 16 bits, podemos multiplicar cada elemento del kernel por a lo sumo $2^8$ y aun asi no salirnos del rango al hacer el producto con los pixels de la imagen.
+Todos estos razonamientos son los que no llevaron a escoger unsigned int como tipo de representación númerica ya que como cuenta con 16 bits, podemos multiplicar cada elemento del kernel por a lo sumo $2^8$ y aun así no salirnos del rango al hacer el producto con los pixels de la imagen.
 
 $$ 2^{8}.(k_{r,r} + k_{r,r-1} + .. + k_{-r,-r+1} + k_{-r,-r} \leq 2^{8}.1 = 2^{8} $$
 
@@ -393,11 +394,11 @@ Para decidir cual es el valor ideal por el que multiplicar la matriz de convoluc
  
 \paragraph{Registros, mascaras y ciclos}
 
-Como se dijo previamente el funcionamiento de esta implementación es casi identico a la anterior solo que con sus respecetivas adaptaciones, algunos pocos registros sin importancia fueron cambiados en su utilización para llamar a la funcion generadora del kernel, las mascaras y forma en que se recorre cada vecindad de pixel al calcular su nuevo valor fueron cambiadas ligeramente para adaptarse a trabajar con el doble de pixels simultaneamente, ya que se paso de utilizar double a unsigned short. Tambien al dejar de utilizar representaciones de punto flotante dejo de ser necesario la utilizacio de instrucciones como $cvtps2dq$ por ejemplo.
+Como se dijo previamente el funcionamiento de esta implementación es casi identico a la anterior solo que con sus respecetivas adaptaciones, algunos pocos registros sin importancia fueron cambiados en su utilización para llamar a la función generadora del kernel, las máscaras y forma en que se recorre cada vecindad de pixel al calcular su nuevo valor fueron cambiadas ligeramente para adaptarse a trabajar con el doble de pixels simultaneamente, ya que se paso de utilizar double a unsigned short. Tambien al dejar de utilizar representaciones de punto flotante dejo de ser necesario la utilización de instrucciones como $cvtps2dq$, por ejemplo.
 
 \paragraph{Guardado del pixel nuevo}
 
-Para hacer esto se utiliza la mascara llamada $mask\_short\_to\_pixel\_0$ en nuestro codigo, con la cual $pshufb$ hace su trabajo y posiciona lo tres unsigned shorts alojados en xmm10 en los primeros 4 bits del mismo registro, convieriendolos en 4 pixels. Es importante observar que antes de hacer esto dividimos por el valor con el que habiamos multiplicado al kernel al principio, de no hacer esto nunca reestableceriamos el valor real del kernel y no habriamos hecho correctamente las cuentas
+Para hacer esto se utiliza la máscara llamada $mask\_short\_to\_pixel\_0$ en nuestro código, con la cual $pshufb$ hace su trabajo y posiciona lo tres unsigned shorts alojados en xmm10 en los primeros 4 bits del mismo registro, convieriendolos en 4 pixels. Es importante observar que antes de hacer esto dividimos por el valor con el que habiamos multiplicado al kernel al principio, de no hacer esto nunca reestableceriamos el valor real del kernel y no habriamos hecho correctamente las cuentas
 
 \subsubsection{Implementación experimental 2}
 
